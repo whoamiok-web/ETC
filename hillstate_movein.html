@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>힐스테이트 첨단센트럴 입주 가이드</title>
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#1a2940; --sub:#6b7a8d; --line:#dde3ea;
+  --th:#37474f; --thbg:#f4f6f9; --neg:#c62828; --pos:#1b5e20; --acc:#1565c0;
+  --warnbg:#fff8e1; --warnbd:#f9a825; --alertbg:#fce4ec; --alertbd:#e91e63; --alertink:#880e4f;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+    --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --acc:#90caf9;
+    --warnbg:#2e2a1a; --warnbd:#c79a1e; --alertbg:#3a1f2a; --alertbd:#c2185b; --alertink:#f8bbd9;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+  --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --acc:#90caf9;
+  --warnbg:#2e2a1a; --warnbd:#c79a1e; --alertbg:#3a1f2a; --alertbd:#c2185b; --alertink:#f8bbd9;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  padding:32px 24px 50px 24px;max-width:860px;}
+h1{font-size:22px;margin:0 0 6px;color:var(--ink);text-wrap:balance;}
+.subtitle{font-size:13px;color:var(--sub);margin-bottom:24px;}
+h2{font-size:15px;margin:30px 0 10px;color:var(--ink);border-left:4px solid #1565c0;padding-left:8px;}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.nav a{font-size:12.5px;font-weight:700;text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:var(--card);}
+.nav a[aria-current]{background:#1565c0;border-color:#1565c0;color:#fff;}
+.nav a:hover{border-color:#1565c0;}
+.nav a:focus-visible,.xlink:focus-visible,.ck input:focus-visible{outline:2px solid #1565c0;outline-offset:2px;}
+.xlink{color:#1565c0;font-weight:700;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .xlink{color:#90caf9;}}
+:root[data-theme="dark"] .xlink{color:#90caf9;}
+.alert{background:var(--alertbg);border:1px solid var(--alertbd);border-radius:10px;padding:12px 16px;font-size:12.5px;line-height:22px;color:var(--ink);}
+.alert b.h{color:var(--alertink);}
+.alert ul{margin:6px 0 0;padding-left:18px;}
+.tw{overflow-x:auto;background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:520px;}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);line-height:20px;vertical-align:top;}
+th{background:var(--thbg);color:var(--th);text-align:left;font-weight:700;white-space:nowrap;}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+td.d{white-space:nowrap;font-weight:700;font-variant-numeric:tabular-nums;}
+tr.key td{background:#fce4ec33;}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;white-space:nowrap;}
+.pill.r{background:#fce4ec;color:#880e4f;} .pill.y{background:#fff8e1;color:#bf360c;} .pill.b{background:#e3f2fd;color:#0d47a1;} .pill.g{background:#e8f5e9;color:#1b5e20;}
+.svgwrap{background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;padding:12px;overflow-x:auto;}
+.svgwrap svg{width:100%;min-width:620px;height:auto;display:block;}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;}
+.card{background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;padding:14px 16px;font-size:12.5px;line-height:22px;}
+.card h3{font-size:13px;margin:0 0 6px;}
+.card ul{margin:0;padding-left:18px;}
+.ck{list-style:none;padding:0;margin:0;display:grid;gap:2px;}
+.ck label{display:flex;gap:8px;align-items:flex-start;cursor:pointer;}
+.ck input{margin-top:5px;accent-color:#1565c0;flex-shrink:0;}
+.ck input:checked + span{color:var(--sub);text-decoration:line-through;}
+.progress{font-size:12px;color:var(--sub);margin:0 0 8px;}
+.check{background:var(--warnbg);border:1px solid var(--warnbd);border-radius:10px;padding:12px 16px;font-size:12.5px;line-height:22px;}
+.check p{margin:0 0 8px;} .check p:last-child{margin:0;}
+.legend{display:flex;gap:18px;margin-top:18px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.note{margin-top:12px;font-size:11.5px;color:#999;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="힐스테이트 문서"><a href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a><a href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco">대출 상환스케줄</a><a href="hillstate_movein.html" data-art="https://claude.ai/artifact/3ZVML8YncS6AziZ5n8jKZU" aria-current="page">입주 가이드</a></nav>
+
+<h1>힐스테이트 첨단센트럴 입주 가이드</h1>
+<div class="subtitle">0111동 1303호 · 84A · 입주지정기간 2026.10.30(금) ~ 2027.01.29(금), 92일 · 입주안내문(2026.09) 요약 · 작성기준일 2026.09.25</div>
+
+<div class="alert">
+  <b class="h">꼭 지켜야 할 5가지</b>
+  <ul>
+    <li><b>중도금 대출은 농협은행에 직접 상환</b>합니다. 분양대금 계좌에 넣으면 입주증이 나오지 않습니다.</li>
+    <li><b>잔금·옵션·대납이자는 현장 수납이 안 됩니다.</b> 항목별 지정계좌에 따로 입금하고 입금증을 챙기세요.</li>
+    <li><b>입주증은 평일에만</b> 발급합니다(9:30~16:00). 주말 이사라면 평일에 미리 완납하고 입주증을 받아 두세요.</li>
+    <li><b>2026.10.30부터 중도금 대출 이자는 본인 부담</b>입니다. 농협 지점에서 자동이체를 등록하세요.</li>
+    <li><b>잔금 완납일부터 60일 안에 취득세 신고·납부</b>를 해야 합니다. 늦으면 가산세가 붙습니다.</li>
+  </ul>
+</div>
+
+<h2>1. 주요 일정</h2>
+<div class="tw"><table>
+  <tr><th>날짜</th><th>내용</th><th>구분</th></tr>
+  <tr><td class="d">2026.10.07(수) 10:00~</td><td>이사 예약 시작 (힐스테이트 홈페이지, 선착순)</td><td><span class="pill g">이사</span></td></tr>
+  <tr class="key"><td class="d">2026.10.29(목)</td><td>시행사의 중도금 대출 이자 대납 종료</td><td><span class="pill r">비용</span></td></tr>
+  <tr class="key"><td class="d">2026.10.30(금)</td><td>입주 개시 · 입주증 발급과 키 불출 시작 · 이날부터 중도금 대출 이자 본인 부담</td><td><span class="pill r">비용</span> <span class="pill b">입주</span></td></tr>
+  <tr><td class="d">이사일 3일 전</td><td>입주 청소, 탄성코트·줄눈 등 간단한 작업 가능 (이사 예약 세대만)</td><td><span class="pill g">이사</span></td></tr>
+  <tr><td class="d">잔금 완납일 + 60일</td><td>취득세 신고·납부 기한 (준공 전 완납 시 사용검사일 + 60일)</td><td><span class="pill y">세금</span></td></tr>
+  <tr><td class="d">잔금 완납일 + 60일</td><td>소유권 이전등기 접수 기한 (보존등기 전 완납 시 보존등기 접수일 + 60일)</td><td><span class="pill y">등기</span></td></tr>
+  <tr><td class="d">전입일 + 14일</td><td>전입신고 · 차량 주소 변경은 15일 이내</td><td><span class="pill b">입주 후</span></td></tr>
+  <tr><td class="d">2027.01.29(금)</td><td>입주지정기간 종료</td><td><span class="pill b">입주</span></td></tr>
+  <tr class="key"><td class="d">2027.01.30(토)</td><td>잔금 연체료(연 7.80%) 가산 시작 · 미입주여도 관리비 부과 시작</td><td><span class="pill r">비용</span></td></tr>
+</table></div>
+
+<h2>2. 입주 절차</h2>
+<div class="svgwrap">
+<svg viewBox="0 0 840 416" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif" role="img" aria-label="입주 절차 9단계">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/></filter>
+    <marker id="arr-gray" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L0,8 L10,4 z" fill="#78909c"/></marker>
+  </defs>
+
+  <!-- 1행 (y=10) -->
+  <rect x="20" y="10" width="240" height="112" rx="10" fill="#e8f5e9" stroke="#43a047" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="105" y="20" width="70" height="20" rx="5" fill="#a5d6a7"/>
+  <text x="140" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">① 예약</text>
+  <text x="140" y="60" text-anchor="middle" font-size="15" font-weight="800" fill="#1b5e20">이사 예약</text>
+  <line x1="36" y1="70" x2="244" y2="70" stroke="#a5d6a7" stroke-width="1.2"/>
+  <text x="140" y="90" text-anchor="middle" font-size="12" fill="#555">10/07 10시~ 홈페이지 선착순</text>
+  <text x="140" y="110" text-anchor="middle" font-size="12" fill="#555">사다리차 사용 불가</text>
+
+  <line x1="262" y1="66" x2="296" y2="66" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <rect x="300" y="10" width="240" height="112" rx="10" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="385" y="20" width="70" height="20" rx="5" fill="#ffe082"/>
+  <text x="420" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#bf360c">② 상환</text>
+  <text x="420" y="60" text-anchor="middle" font-size="15" font-weight="800" fill="#bf360c">중도금 대출 상환</text>
+  <line x1="316" y1="70" x2="524" y2="70" stroke="#ffe082" stroke-width="1.2"/>
+  <text x="420" y="90" text-anchor="middle" font-size="12" fill="#555">농협은행에 직접 상환</text>
+  <text x="420" y="110" text-anchor="middle" font-size="12" fill="#555">상환 영수증(완납증명서) 발급</text>
+
+  <line x1="542" y1="66" x2="576" y2="66" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <rect x="580" y="10" width="240" height="112" rx="10" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="665" y="20" width="70" height="20" rx="5" fill="#ffe082"/>
+  <text x="700" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#bf360c">③ 납부</text>
+  <text x="700" y="60" text-anchor="middle" font-size="15" font-weight="800" fill="#bf360c">잔금 납부</text>
+  <line x1="596" y1="70" x2="804" y2="70" stroke="#ffe082" stroke-width="1.2"/>
+  <text x="700" y="90" text-anchor="middle" font-size="12" fill="#555">분양 잔금 · 옵션 · 대납이자</text>
+  <text x="700" y="110" text-anchor="middle" font-size="12" fill="#555">항목별 지정계좌 무통장 입금</text>
+
+  <!-- 1행 → 2행 -->
+  <path d="M700,124 L700,136 L140,136 L140,148" fill="none" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <!-- 2행 (y=152) -->
+  <rect x="20" y="152" width="240" height="112" rx="10" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="105" y="162" width="70" height="20" rx="5" fill="#ffe082"/>
+  <text x="140" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="#bf360c">④ 납부</text>
+  <text x="140" y="202" text-anchor="middle" font-size="15" font-weight="800" fill="#bf360c">선수관리비 납부</text>
+  <line x1="36" y1="212" x2="244" y2="212" stroke="#ffe082" stroke-width="1.2"/>
+  <text x="140" y="232" text-anchor="middle" font-size="12" fill="#555">84A 430,000원 · 관리계약 체결</text>
+  <text x="140" y="252" text-anchor="middle" font-size="12" fill="#555">관리사무소 영수증 발급</text>
+
+  <line x1="262" y1="208" x2="296" y2="208" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <rect x="300" y="152" width="240" height="112" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="385" y="162" width="70" height="20" rx="5" fill="#90caf9"/>
+  <text x="420" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">⑤ 발급</text>
+  <text x="420" y="202" text-anchor="middle" font-size="15" font-weight="800" fill="#0d47a1">입주증 발급</text>
+  <line x1="316" y1="212" x2="524" y2="212" stroke="#90caf9" stroke-width="1.2"/>
+  <text x="420" y="232" text-anchor="middle" font-size="12" fill="#555">H리셉션 GX룸 (112동 지하 1층)</text>
+  <text x="420" y="252" text-anchor="middle" font-size="12" fill="#555">평일 9:30~16:00</text>
+
+  <line x1="542" y1="208" x2="576" y2="208" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <rect x="580" y="152" width="240" height="112" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="665" y="162" width="70" height="20" rx="5" fill="#90caf9"/>
+  <text x="700" y="176" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">⑥ 수령</text>
+  <text x="700" y="202" text-anchor="middle" font-size="15" font-weight="800" fill="#0d47a1">키 불출</text>
+  <line x1="596" y1="212" x2="804" y2="212" stroke="#90caf9" stroke-width="1.2"/>
+  <text x="700" y="232" text-anchor="middle" font-size="12" fill="#555">H리셉션 필라테스룸 (112동 B1)</text>
+  <text x="700" y="252" text-anchor="middle" font-size="12" fill="#555">입주증 · 신분증 지참</text>
+
+  <!-- 2행 → 3행 -->
+  <path d="M700,266 L700,278 L140,278 L140,290" fill="none" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <!-- 3행 (y=294) -->
+  <rect x="20" y="294" width="240" height="112" rx="10" fill="#e8f5e9" stroke="#43a047" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="105" y="304" width="70" height="20" rx="5" fill="#a5d6a7"/>
+  <text x="140" y="318" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">⑦ 확인</text>
+  <text x="140" y="344" text-anchor="middle" font-size="15" font-weight="800" fill="#1b5e20">시설물 확인</text>
+  <line x1="36" y1="354" x2="244" y2="354" stroke="#a5d6a7" stroke-width="1.2"/>
+  <text x="140" y="374" text-anchor="middle" font-size="12" fill="#555">입주서비스 매니저 동행</text>
+  <text x="140" y="394" text-anchor="middle" font-size="12" fill="#555">계량기 검침 · 인수확인서 제출</text>
+
+  <line x1="262" y1="350" x2="296" y2="350" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <rect x="300" y="294" width="240" height="112" rx="10" fill="#e8f5e9" stroke="#43a047" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="385" y="304" width="70" height="20" rx="5" fill="#a5d6a7"/>
+  <text x="420" y="318" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">⑧ 이사</text>
+  <text x="420" y="344" text-anchor="middle" font-size="15" font-weight="800" fill="#1b5e20">이사</text>
+  <line x1="316" y1="354" x2="524" y2="354" stroke="#a5d6a7" stroke-width="1.2"/>
+  <text x="420" y="374" text-anchor="middle" font-size="12" fill="#555">예약한 시간 순서대로</text>
+  <text x="420" y="394" text-anchor="middle" font-size="12" fill="#555">경비실에 입주증 제시</text>
+
+  <line x1="542" y1="350" x2="576" y2="350" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <rect x="580" y="294" width="240" height="112" rx="10" fill="#fce4ec" stroke="#e91e63" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="665" y="304" width="70" height="20" rx="5" fill="#f8bbd9"/>
+  <text x="700" y="318" text-anchor="middle" font-size="11" font-weight="700" fill="#880e4f">⑨ 접수</text>
+  <text x="700" y="344" text-anchor="middle" font-size="15" font-weight="800" fill="#880e4f">하자 · 불편 접수</text>
+  <line x1="596" y1="354" x2="804" y2="354" stroke="#f8bbd9" stroke-width="1.2"/>
+  <text x="700" y="374" text-anchor="middle" font-size="12" fill="#555">H웰컴라운지 (108동 후면 B1)</text>
+  <text x="700" y="394" text-anchor="middle" font-size="12" fill="#555">☎ 061-878-7035</text>
+</svg>
+</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#43a047;"></div>이사 · 시설</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f9a825;"></div>상환 · 납부</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e88e5;"></div>입주증 · 키</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e91e63;"></div>하자 접수</div>
+</div>
+
+<h2>3. 돈 내는 곳 (항목별로 계좌가 다름)</h2>
+<div class="tw"><table>
+  <tr><th>항목</th><th class="n">금액(원)</th><th>납부처</th><th>받아 둘 증빙</th></tr>
+  <tr><td>분양대금 잔금</td><td class="n">148,200,000</td><td>Sh수협은행 세대별 가상계좌 (공급계약서 참조)</td><td>무통장 입금증</td></tr>
+  <tr><td>발코니 확장 잔금</td><td class="n">38,178,000</td><td>Sh수협은행 세대별 가상계좌 (옵션계약서 참조)</td><td>무통장 입금증</td></tr>
+  <tr><td>중도금 대출 대납이자</td><td class="n">15,990,217</td><td>Sh수협은행 대납이자 계좌 (예금주 한국자산신탁)</td><td>무통장 입금증</td></tr>
+  <tr><td>중도금 대출 상환</td><td class="n">296,400,000</td><td><b>농협은행 대출 지점에 직접 상환</b></td><td>중도금 대출 상환 영수증</td></tr>
+  <tr><td>선수관리비 (84A)</td><td class="n">430,000</td><td>농협은행 관리사무소 계좌 (예금주 ㈜서호피엠씨)</td><td>관리사무소 발급 영수증</td></tr>
+</table></div>
+<div class="note" style="margin-top:8px">※ 금액은 2026.09.15 잔금 납부 안내장 기준입니다. 대납이자는 9/7 기준이라 10/29까지 늘어납니다. 입금자명에는 동·호수와 계약자명을 함께 적고, 계좌를 잘못 넣으면 환불까지 4주 이상 걸립니다.</div>
+
+<h2>4. 입주증 받을 때 챙길 서류</h2>
+<div class="card">
+  <p class="progress" id="prog">0 / 6 준비됨</p>
+  <ul class="ck" id="ck">
+    <li><label><input type="checkbox" id="c1"><span>신분증 (주민등록증 또는 운전면허증)</span></label></li>
+    <li><label><input type="checkbox" id="c2"><span>분양잔금 납입 입금증</span></label></li>
+    <li><label><input type="checkbox" id="c3"><span>발코니 확장 잔금 납입 입금증</span></label></li>
+    <li><label><input type="checkbox" id="c4"><span>중도금 대출 상환 영수증 (농협은행 발급)</span></label></li>
+    <li><label><input type="checkbox" id="c5"><span>중도금 대출 대납이자 납입 입금증</span></label></li>
+    <li><label><input type="checkbox" id="c6"><span>선수관리비 납부 영수증 (관리사무소 발급)</span></label></li>
+  </ul>
+  <div class="note" style="margin-top:10px">대리인이 가면 위임장(계약자 인감 날인), 계약자 인감증명서(본인발급용), 대리인 신분증이 더 필요합니다. 가족이 대리인이면 가족관계증명서와 대리인 신분증만 있으면 됩니다. 제출 서류의 주민등록번호 뒷자리는 가리고 내세요. 체크 표시는 이 브라우저에만 저장됩니다.</div>
+</div>
+
+<h2>5. 대출·등기·세금</h2>
+<div class="cols">
+  <div class="card">
+    <h3>잔금 대출 (담보대출 전환)</h3>
+    <ul>
+      <li>입주지정기간 전에 대출 수속을 끝내야 합니다. 대출금이 분양대금 계좌로 들어오고 중도금 대출 상환이 확인돼야 입주증이 나옵니다.</li>
+      <li>잔금 대출 은행이 <b>1순위 근저당</b>을 잡아야 하므로 입주 전에 소유권 이전·근저당 설정 서류와 자필서명을 마쳐야 합니다.</li>
+      <li>대출 은행이 2곳 이상이면 순위 문제로 입주증 발급이 막힐 수 있습니다.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>취득세</h3>
+    <ul>
+      <li>기한: 잔금 완납일(준공 전 완납 시 사용검사일)부터 <b>60일 이내</b> 신고·납부</li>
+      <li>과세표준: 분양가 + 옵션 − 부가세. 85㎡ 이하·6억 이하는 <b>1.1%</b> (예상 약 598만 원)</li>
+      <li>미신고 가산세는 세액의 최대 20%, 미납부 가산세는 세액 × 0.03% × 지연일수입니다.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>소유권 이전등기</h3>
+    <ul>
+      <li>단지 보존등기(준공 후 60일 이내)가 끝나야 개별 이전등기를 할 수 있습니다.</li>
+      <li>기한: 잔금 완납일(보존등기 전 완납 시 보존등기 접수일)부터 60일 이내, 넘기면 과태료가 붙습니다.</li>
+      <li>지정 법무사: 법무법인 수도 ☎ 02-2138-0508 · 서류 발급까지 최대 14일</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>이사·인테리어</h3>
+    <ul>
+      <li>이사는 사다리차를 쓸 수 없고 엘리베이터 시간을 예약해야 합니다. 주말과 손 없는 날은 붐빕니다.</li>
+      <li>인테리어 공사는 입주증을 받은 뒤 관리사무소에 신고해야 합니다. 예치금 50만 원(환불)과 승강기 이용료 10만 원이 듭니다.</li>
+      <li>이사 파손 시설물은 입주자가 부담합니다.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>6. 입주 후 바로 할 일</h2>
+<div class="tw"><table>
+  <tr><th>할 일</th><th>기한</th><th>어디서</th></tr>
+  <tr><td>중도금 대출 이자 자동이체 등록 (상환 전까지)</td><td>10/30 전</td><td>대출받은 농협 지점</td></tr>
+  <tr><td>전입신고</td><td>전입일 + 14일</td><td>진원면 행정복지센터 ☎ 061-390-7602 또는 정부24</td></tr>
+  <tr><td>차량 주소 변경</td><td>전입일 + 15일</td><td>전국번호판은 전입신고 때 자동 처리 · 지역번호판은 장성군 민원봉사과 ☎ 061-390-7245</td></tr>
+  <tr><td>도시가스 연결 (연결비 별도)</td><td>입주 전</td><td>해양에너지 고객센터 ☎ 1544-1115</td></tr>
+  <tr><td>자녀 전학</td><td>전입 후</td><td>초등은 전입신고 때 배정, 중·고등은 장성교육지원청 ☎ 061-390-6000</td></tr>
+</table></div>
+
+<h2>7. 자금계획에 더할 항목</h2>
+<div class="check">
+  <p><b>① 선수관리비 430,000원:</b> 입주증을 받으려면 꼭 내야 하는데, <a class="xlink" href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a>에는 아직 없습니다. 넣으면 잉여액이 11,731,783원에서 <b>11,301,783원</b>으로 줄어듭니다. 나중에 집을 팔 때 돌려받는 돈입니다.</p>
+  <p><b>② 10/30 이후 중도금 대출 이자:</b> 잔금일이 10/30보다 늦어지면 중도금 대출 296,400,000원의 이자를 직접 내야 합니다. 금리 4.5%로 가정하면 한 달에 약 110만 원입니다. 대출 금리는 농협에서 확인하세요.</p>
+  <p><b>③ 인테리어를 한다면:</b> 공사 예치금 50만 원(환불)과 승강기 이용료 10만 원이 듭니다.</p>
+  <p><b>④ 도시가스 연결비:</b> 입주자가 직접 신청하고 연결비를 따로 냅니다.</p>
+</div>
+
+<h2>8. 연락처</h2>
+<div class="tw"><table>
+  <tr><th>부서</th><th>업무</th><th>전화</th><th>운영</th></tr>
+  <tr><td>H리셉션 (입주증 발급처)</td><td>입주증, 잔금·연체 확인, 이사 예약</td><td class="d">061-878-7034 (내선 1)</td><td>평일 9:30~16:00</td></tr>
+  <tr><td>H리셉션 (키 불출처)</td><td>키 불출, 세대 동행, 시설물 인수, 임시 방문</td><td class="d">061-878-7034 (내선 2)</td><td>매일 9:00~16:30</td></tr>
+  <tr><td>H리셉션</td><td>명의변경 / 소유권 이전등기</td><td class="d">내선 3 / 내선 4</td><td>평일</td></tr>
+  <tr><td>관리사무소 (114동 1층)</td><td>선수관리비, 이사 방법</td><td class="d">061-392-0107</td><td>9:00~18:00</td></tr>
+  <tr><td>H웰컴라운지 (108동 후면 B1)</td><td>하자 보수 접수</td><td class="d">061-878-7035</td><td>매일 9:00~16:30</td></tr>
+  <tr><td>시행사 (납부 안내장)</td><td>후불이자 확정 금액</td><td class="d">1877-8555</td><td></td></tr>
+</table></div>
+
+<div class="note">
+  ※ 출처: 힐스테이트 첨단센트럴 입주안내문(2026.09), (잔금) 납부 안내장(2026.09.15) | 점심시간 12:00~13:00 | 업무 위치와 시간은 바뀔 수 있으니 방문 전 전화로 확인<br>
+  ※ 세대별 가상계좌 번호와 계약자 정보는 이 문서에서 제외함 | 기준일: 2026.09.25
+</div>
+
+<script>
+(function(){
+  var boxes=[].slice.call(document.querySelectorAll('#ck input'));
+  var KEY='hillstate-movein-docs';
+  var saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){}
+  function update(){
+    var n=boxes.filter(function(b){return b.checked;}).length;
+    document.getElementById('prog').textContent=n+' / '+boxes.length+' 준비됨';
+  }
+  boxes.forEach(function(b){
+    b.checked=!!saved[b.id];
+    b.addEventListener('change',function(){
+      saved[b.id]=b.checked;
+      try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}
+      update();
+    });
+  });
+  update();
+})();
+(function(){
+  var h=location.hostname;
+  if(location.protocol==='file:'||/\.github\.io$/.test(h))return;
+  document.querySelectorAll('a[data-art]').forEach(function(a){a.href=a.dataset.art;a.target='_blank';a.rel='noopener';});
+})();
+</script>
+</body>
+</html>
