@@ -63,9 +63,19 @@ summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);padding:6
 .scroll{max-height:520px;overflow:auto;}
 .check{background:var(--warnbg);border:1px solid var(--warnbd);border-radius:10px;padding:12px 16px;font-size:12.5px;line-height:22px;}
 .check p{margin:0 0 8px;} .check p:last-child{margin:0;}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.nav a{font-size:12.5px;font-weight:700;text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:var(--card);}
+.nav a[aria-current]{background:#1565c0;border-color:#1565c0;color:#fff;}
+.nav a:hover{border-color:#1565c0;}
+.nav a:focus-visible,.xlink:focus-visible{outline:2px solid #1565c0;outline-offset:2px;}
+.xlink{color:#1565c0;font-weight:700;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .xlink{color:#90caf9;}}
+:root[data-theme="dark"] .xlink{color:#90caf9;}
 </style>
 </head>
 <body>
+
+<nav class="nav" aria-label="힐스테이트 문서"><a href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a><a href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco" aria-current="page">대출 상환스케줄</a></nav>
 
 <h1>힐스테이트 첨단센트럴 잔금대출 상환스케줄</h1>
 <div class="subtitle">잔금 대출 3억 원 · 변동금리 연 4.4% 가정 · 작성기준일 2026.09.25</div>
@@ -103,7 +113,7 @@ summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);padding:6
   <p><b>① 변동금리:</b> 이 표는 대출기간 내내 입력한 금리가 유지된다고 가정합니다. 실제로는 COFIX 등 기준금리가 바뀔 때마다(보통 6개월·12개월 주기) 남은 원금과 기간으로 월 상환액이 다시 계산됩니다. 금리가 0.5%p 오르내릴 때의 차이는 1번 표를 참고하세요.</p>
   <p><b>② 원 단위 처리:</b> 월 이자는 잔액 × 연 금리 ÷ 12를 원 단위로 반올림했고, 끝전은 마지막 회차에서 정리합니다. 은행 실제 스케줄과 몇 원 차이가 날 수 있습니다.</p>
   <p><b>③ 제외 항목:</b> 중도상환수수료, 인지세, 근저당 설정비, 보증료는 포함하지 않았습니다.</p>
-  <p><b>④ 자금계획 연계:</b> 자금계획의 잔금 후 여유자금(약 1,172만 원)은 입주 초기 월 상환액의 약 7~8개월분입니다. 첫 상환일은 보통 대출 실행 한 달 뒤입니다.</p>
+  <p><b>④ 자금계획 연계:</b> <a class="xlink" href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a>의 잔금 후 여유자금(약 1,172만 원)은 입주 초기 월 상환액의 약 7~8개월분입니다. 첫 상환일은 보통 대출 실행 한 달 뒤입니다.</p>
 </div>
 
 <script>
@@ -171,6 +181,13 @@ $('f').addEventListener('submit',e=>e.preventDefault());
 $('amt').addEventListener('input',()=>{const v=parseAmt();$('amt').value=v?v.toLocaleString('ko-KR'):'';render();});
 ['rate','yrs','grace','method'].forEach(id=>$(id).addEventListener('input',render));
 render();
+</script>
+<script>
+(function(){
+  var h=location.hostname;
+  if(location.protocol==='file:'||/\.github\.io$/.test(h))return;
+  document.querySelectorAll('a[data-art]').forEach(function(a){a.href=a.dataset.art;a.target='_blank';a.rel='noopener';});
+})();
 </script>
 </body>
 </html>
