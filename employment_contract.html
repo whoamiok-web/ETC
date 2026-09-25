@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>표준근로계약서</title>
+<style>
+@page{size:A4;margin:0;}
+:root{--ink:#111;--sub:#555;--line:#222;--fill:#eef4ff;}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:#e9ecf1;color:var(--ink);
+  font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","Nanum Gothic",sans-serif;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+
+/* 화면용 안내 바 */
+.bar{position:sticky;top:0;z-index:5;background:#1a2940;color:#fff;padding:10px 16px;
+  display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;}
+.bar button{font:inherit;font-weight:700;background:#fff;color:#1a2940;border:0;border-radius:6px;padding:7px 14px;cursor:pointer;}
+.bar label{display:flex;gap:6px;align-items:center;cursor:pointer;}
+.bar .tip{color:#c8d3e3;font-size:12px;}
+
+/* A4 용지 */
+.sheet{width:210mm;height:297mm;margin:16px auto;background:#fff;box-shadow:0 2px 12px #0002;
+  padding:14mm 18mm 12mm;overflow:hidden;position:relative;}
+h1{font-size:21pt;text-align:center;letter-spacing:6pt;margin:0 0 1mm;}
+.kind{text-align:center;font-size:10.5pt;margin:0 0 5mm;}
+.body{font-size:10.5pt;line-height:1.62;}
+.body p{margin:0;}
+.intro{margin-bottom:3mm !important;}
+ol.items{list-style:none;margin:0;padding:0;}
+ol.items>li{margin-top:1.2mm;}
+.lb{font-weight:700;}
+.sub{padding-left:5mm;}
+.sub2{padding-left:9mm;}
+
+/* 빈칸: 클릭해서 입력 가능 */
+.f{display:inline-block;min-width:var(--w,24mm);border-bottom:1px solid var(--line);
+  padding:0 1mm;text-align:center;line-height:1.35;vertical-align:baseline;outline:none;}
+.f:focus{background:var(--fill);}
+.chk{display:inline-flex;align-items:center;gap:1mm;margin-right:5mm;cursor:pointer;}
+.chk input{width:3.6mm;height:3.6mm;margin:0;accent-color:#111;}
+
+.date{text-align:center;margin:4mm 0 3mm;font-size:10.5pt;}
+.sign{width:100%;border-collapse:collapse;font-size:10.5pt;line-height:1.6;}
+.sign td{padding:0.6mm 0;vertical-align:bottom;}
+.sign td.who{width:22mm;font-weight:700;}
+.sign tr.gap td{height:2mm;}
+
+/* 작성 안내 */
+.guide h2{font-size:15pt;margin:0 0 2mm;}
+.guide .note{font-size:9pt;color:var(--sub);margin:0 0 5mm;}
+.guide h3{font-size:11pt;margin:5mm 0 1.5mm;}
+.guide ul{margin:0;padding-left:5mm;font-size:10pt;line-height:1.7;}
+
+@media screen and (max-width:820px){
+  .sheet{zoom:.55;}
+}
+@media print{
+  body{background:#fff;}
+  .bar{display:none;}
+  .sheet{margin:0;box-shadow:none;page-break-after:always;break-after:page;}
+  .sheet:last-of-type{page-break-after:auto;break-after:auto;}
+  body:not(.with-guide) .guide{display:none;}
+  .f:focus{background:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <button type="button" id="printBtn">인쇄하기</button>
+  <label><input type="checkbox" id="withGuide"> 작성 안내 페이지도 인쇄</label>
+  <span class="tip">밑줄 칸을 눌러 바로 입력할 수 있습니다 · 인쇄 설정: 용지 A4, 배율 100%(기본), 머리글/바닥글 끄기</span>
+</div>
+
+<!-- 1쪽: 계약서 -->
+<section class="sheet">
+  <h1>표준근로계약서</h1>
+  <p class="kind">(기간의 정함이 없는 경우)</p>
+
+  <div class="body">
+    <p class="intro"><span class="f" contenteditable="true" style="--w:38mm"></span> (이하 "사업주"라 함)과(와) <span class="f" contenteditable="true" style="--w:30mm"></span> (이하 "근로자"라 함)은 다음과 같이 근로계약을 체결한다.</p>
+
+    <ol class="items">
+      <li><span class="lb">1. 근로개시일</span> : <span class="f" contenteditable="true" style="--w:14mm"></span>년 <span class="f" contenteditable="true" style="--w:9mm"></span>월 <span class="f" contenteditable="true" style="--w:9mm"></span>일부터</li>
+
+      <li><span class="lb">2. 근무장소</span> : <span class="f" contenteditable="true" style="--w:120mm"></span></li>
+
+      <li><span class="lb">3. 업무의 내용</span> : <span class="f" contenteditable="true" style="--w:114mm"></span></li>
+
+      <li><span class="lb">4. 소정근로시간</span> : <span class="f" contenteditable="true" style="--w:9mm"></span>시 <span class="f" contenteditable="true" style="--w:9mm"></span>분부터 <span class="f" contenteditable="true" style="--w:9mm"></span>시 <span class="f" contenteditable="true" style="--w:9mm"></span>분까지
+        <p class="sub">(휴게시간 : <span class="f" contenteditable="true" style="--w:9mm"></span>시 <span class="f" contenteditable="true" style="--w:9mm"></span>분 ~ <span class="f" contenteditable="true" style="--w:9mm"></span>시 <span class="f" contenteditable="true" style="--w:9mm"></span>분)</p></li>
+
+      <li><span class="lb">5. 근무일/휴일</span> : 매주 <span class="f" contenteditable="true" style="--w:9mm"></span>일(또는 매일 단위) 근무, 주휴일 매주 <span class="f" contenteditable="true" style="--w:9mm"></span>요일</li>
+
+      <li><span class="lb">6. 임금</span>
+        <p class="sub">- 월(일, 시간)급 : <span class="f" contenteditable="true" style="--w:40mm"></span>원</p>
+        <p class="sub">- 상여금 : <label class="chk"><input type="checkbox">있음</label><span class="f" contenteditable="true" style="--w:30mm"></span>원, &nbsp;<label class="chk"><input type="checkbox">없음</label></p>
+        <p class="sub">- 기타급여(제수당 등) : <label class="chk"><input type="checkbox">있음</label><label class="chk"><input type="checkbox">없음</label></p>
+        <p class="sub2">· <span class="f" contenteditable="true" style="--w:30mm"></span> <span class="f" contenteditable="true" style="--w:24mm"></span>원 &nbsp;&nbsp; · <span class="f" contenteditable="true" style="--w:30mm"></span> <span class="f" contenteditable="true" style="--w:24mm"></span>원</p>
+        <p class="sub2">· <span class="f" contenteditable="true" style="--w:30mm"></span> <span class="f" contenteditable="true" style="--w:24mm"></span>원 &nbsp;&nbsp; · <span class="f" contenteditable="true" style="--w:30mm"></span> <span class="f" contenteditable="true" style="--w:24mm"></span>원</p>
+        <p class="sub">- 임금지급일 : 매월(매주 또는 매일) <span class="f" contenteditable="true" style="--w:9mm"></span>일 (휴일의 경우에는 전일 지급)</p>
+        <p class="sub">- 지급방법 : <label class="chk"><input type="checkbox">근로자에게 직접 지급</label><label class="chk"><input type="checkbox">근로자 명의 예금통장에 입금</label></p>
+      </li>
+
+      <li><span class="lb">7. 연차유급휴가</span>
+        <p class="sub">- 연차유급휴가는 근로기준법에서 정하는 바에 따라 부여함</p></li>
+
+      <li><span class="lb">8. 사회보험 적용여부</span> (해당란에 체크)
+        <p class="sub"><label class="chk"><input type="checkbox">고용보험</label><label class="chk"><input type="checkbox">산재보험</label><label class="chk"><input type="checkbox">국민연금</label><label class="chk"><input type="checkbox">건강보험</label></p></li>
+
+      <li><span class="lb">9. 근로계약서 교부</span>
+        <p class="sub">- 사업주는 근로계약을 체결함과 동시에 본 계약서를 사본하여 근로자의 교부요구와 관계없이 근로자에게 교부함 (근로기준법 제17조 이행)</p></li>
+
+      <li><span class="lb">10. 근로계약, 취업규칙 등의 성실한 이행의무</span>
+        <p class="sub">- 사업주와 근로자는 각자가 근로계약, 취업규칙, 단체협약을 지키고 성실하게 이행하여야 함</p></li>
+
+      <li><span class="lb">11. 기타</span>
+        <p class="sub">- 이 계약에 정함이 없는 사항은 근로기준법령에 의함</p></li>
+    </ol>
+  </div>
+
+  <p class="date"><span class="f" contenteditable="true" style="--w:16mm"></span>년 <span class="f" contenteditable="true" style="--w:10mm"></span>월 <span class="f" contenteditable="true" style="--w:10mm"></span>일</p>
+
+  <table class="sign">
+    <tr><td class="who">(사업주)</td><td>사업체명 : <span class="f" contenteditable="true" style="--w:52mm"></span> (전화 : <span class="f" contenteditable="true" style="--w:36mm"></span>)</td></tr>
+    <tr><td></td><td>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 : <span class="f" contenteditable="true" style="--w:112mm"></span></td></tr>
+    <tr><td></td><td>대&nbsp;표&nbsp;자 : <span class="f" contenteditable="true" style="--w:52mm"></span> (서명)</td></tr>
+    <tr class="gap"><td></td><td></td></tr>
+    <tr><td class="who">(근로자)</td><td>주&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 : <span class="f" contenteditable="true" style="--w:112mm"></span></td></tr>
+    <tr><td></td><td>연&nbsp;락&nbsp;처 : <span class="f" contenteditable="true" style="--w:52mm"></span></td></tr>
+    <tr><td></td><td>성&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명 : <span class="f" contenteditable="true" style="--w:52mm"></span> (서명)</td></tr>
+  </table>
+</section>
+
+<!-- 2쪽: 작성 안내 (기본값은 인쇄 제외) -->
+<section class="sheet guide">
+  <h2>작성 안내</h2>
+  <p class="note">작성 참고용 페이지입니다. 근로자에게 교부하는 계약서에는 넣지 마세요. 위쪽 "작성 안내 페이지도 인쇄"를 체크했을 때만 인쇄됩니다.</p>
+
+  <h3>반드시 적어야 하는 사항 (근로기준법 제17조)</h3>
+  <ul>
+    <li>임금의 구성항목, 계산방법, 지급방법</li>
+    <li>소정근로시간, 주휴일, 연차유급휴가</li>
+    <li>근로계약서를 서면으로 교부하지 않으면 500만 원 이하의 벌금 대상입니다.</li>
+  </ul>
+
+  <h3>임금 작성 시 확인할 점</h3>
+  <ul>
+    <li>2026년 최저임금은 시간당 10,320원입니다. 주 40시간 근무자의 월 환산액은 2,156,880원(209시간 기준)입니다.</li>
+    <li>2027년 1월 1일부터는 2027년 최저임금이 적용되므로 고용노동부 고시 금액을 확인하세요.</li>
+    <li>월급에 주휴수당이 포함되어 있는지, 수당 항목별 금액이 얼마인지 나누어 적어 두면 분쟁을 막는 데 도움이 됩니다.</li>
+  </ul>
+
+  <h3>근로시간·휴게</h3>
+  <ul>
+    <li>근로시간 4시간마다 30분 이상, 8시간마다 1시간 이상의 휴게시간을 근로시간 도중에 주어야 합니다.</li>
+    <li>1주 소정근로시간은 40시간, 1일 8시간을 넘을 수 없습니다(당사자 합의 시 연장근로 1주 12시간 한도).</li>
+  </ul>
+
+  <h3>다른 양식이 필요한 경우</h3>
+  <ul>
+    <li>계약기간이 정해진 경우: 표준근로계약서(기간의 정함이 있는 경우)</li>
+    <li>단시간근로자(아르바이트 등): 단시간근로자 표준근로계약서 (근로일별 근로시간 기재)</li>
+    <li>18세 미만: 연소근로자 표준근로계약서 (친권자 동의서, 가족관계증명서 필요)</li>
+    <li>건설 일용근로자, 외국인근로자는 각각 전용 양식을 사용합니다.</li>
+  </ul>
+
+  <h3>상시 근로자 5인 미만 사업장</h3>
+  <ul>
+    <li>연차유급휴가, 연장·야간·휴일근로 가산수당, 부당해고 구제 등 일부 규정이 적용되지 않습니다. 이 경우 7번(연차유급휴가) 항목을 사업장 기준에 맞게 고쳐 쓸 수 있습니다.</li>
+  </ul>
+
+  <h3>인쇄 방법</h3>
+  <ul>
+    <li>위쪽 "인쇄하기" 버튼 또는 Ctrl+P(맥은 ⌘+P)를 누릅니다.</li>
+    <li>용지 크기 A4, 배율 100%(기본값)로 두고 "머리글과 바닥글"은 끕니다. 여백은 페이지에 포함되어 있어 "기본값" 또는 "없음" 모두 됩니다.</li>
+    <li>사업주용과 근로자용 2부를 인쇄해 각각 서명한 뒤 1부씩 나눠 가지세요.</li>
+  </ul>
+</section>
+
+<script>
+document.getElementById('printBtn').addEventListener('click',function(){window.print();});
+document.getElementById('withGuide').addEventListener('change',function(e){
+  document.body.classList.toggle('with-guide',e.target.checked);
+});
+</script>
+</body>
+</html>
