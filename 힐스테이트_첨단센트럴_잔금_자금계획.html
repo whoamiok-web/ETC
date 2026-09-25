@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>힐스테이트 첨단센트럴 잔금 자금계획</title>
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#1a2940; --sub:#6b7a8d; --line:#dde3ea;
+  --th:#37474f; --thbg:#f4f6f9; --neg:#c62828; --pos:#1b5e20; --warnbg:#fff8e1; --warnbd:#f9a825;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+    --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --warnbg:#2e2a1a; --warnbd:#c79a1e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+  --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --warnbg:#2e2a1a; --warnbd:#c79a1e;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  padding:32px 24px 50px 24px;max-width:860px;}
+h1{font-size:22px;margin:0 0 6px;color:var(--ink);}
+.subtitle{font-size:13px;color:var(--sub);margin-bottom:28px;}
+h2{font-size:15px;margin:30px 0 10px;color:var(--ink);border-left:4px solid #1565c0;padding-left:8px;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
+.kpi{background:var(--card);border-radius:10px;padding:14px 16px;box-shadow:0 3px 10px #00000014;}
+.kpi .l{font-size:12px;color:var(--sub);}
+.kpi .v{font-size:19px;font-weight:800;margin-top:4px;}
+.kpi.neg .v{color:var(--neg);}
+.tw{overflow-x:auto;background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:420px;}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);line-height:20px;}
+th{background:var(--thbg);color:var(--th);text-align:left;font-weight:700;}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+tr.sum td{font-weight:800;background:var(--thbg);}
+tr.sub td{color:var(--sub);}
+.neg{color:var(--neg);} .pos{color:var(--pos);}
+.svgwrap{background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;padding:12px;}
+.svgwrap svg{width:100%;max-width:440px;height:auto;display:block;}
+.check{background:var(--warnbg);border:1px solid var(--warnbd);border-radius:10px;padding:12px 16px;font-size:12.5px;line-height:22px;}
+.check p{margin:0 0 8px;} .check p:last-child{margin:0;}
+.legend{display:flex;gap:18px;margin-top:18px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.note{margin-top:12px;font-size:11.5px;color:#999;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<h1>힐스테이트 첨단센트럴 잔금 자금계획</h1>
+<div class="subtitle">0111동 1303호 · 84A · 입주예정 2026년 10월 · 작성기준일 2026.09.25</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="l">총 분양대금 (옵션 포함)</div><div class="v">548,540,000</div></div>
+  <div class="kpi"><div class="l">잔금일 필요자금</div><div class="v">498,540,000</div></div>
+  <div class="kpi"><div class="l">자금 조달액</div><div class="v">510,000,000</div></div>
+  <div class="kpi neg"><div class="l">입주비용 반영 후 부족액</div><div class="v">△540,000</div></div>
+</div>
+
+<h2>1. 분양대금 및 납부 현황</h2>
+<div class="tw"><table>
+  <tr><th>구분</th><th class="n">금액(원)</th><th>비고</th></tr>
+  <tr><td>아파트 공급금액</td><td class="n">494,000,000</td><td>대지 148,097,000 + 건물 345,903,000</td></tr>
+  <tr><td>발코니 확장 · 선택품목</td><td class="n">54,540,000</td><td>공급가 49,581,821 + 부가세 4,958,179</td></tr>
+  <tr class="sum"><td>총 분양대금</td><td class="n">548,540,000</td><td></td></tr>
+  <tr class="sub"><td>&nbsp;&nbsp;기납부 계약금</td><td class="n">△10,000,000</td><td></td></tr>
+  <tr class="sub"><td>&nbsp;&nbsp;기납부 중도금</td><td class="n">△55,000,000</td><td></td></tr>
+  <tr class="sum"><td>잔여 납부액 (잔금)</td><td class="n">483,540,000</td><td>잔금일 일시 납부</td></tr>
+</table></div>
+
+<h2>2. 자금 흐름</h2>
+<div class="svgwrap">
+<svg viewBox="0 0 420 650" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/></filter>
+    <marker id="arr-gray" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L0,8 L10,4 z" fill="#78909c"/></marker>
+  </defs>
+
+  <!-- A: 자금 조달 (y=10, h=150) -->
+  <rect x="20" y="10" width="380" height="150" rx="10" fill="#e8f5e9" stroke="#43a047" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="170" y="20" width="80" height="20" rx="5" fill="#a5d6a7"/>
+  <text x="210" y="34" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">자금 조달</text>
+  <text x="210" y="62" text-anchor="middle" font-size="20" font-weight="800" fill="#1b5e20">510,000,000</text>
+  <line x1="36" y1="76" x2="384" y2="76" stroke="#a5d6a7" stroke-width="1.2"/>
+  <text x="36" y="96" font-size="12.5" fill="#555">기존 주택 매도대금</text>
+  <text x="384" y="96" text-anchor="end" font-size="12.5" font-weight="700" fill="#1b5e20">280,000,000</text>
+  <text x="36" y="118" font-size="12.5" fill="#555">잔금 대출</text>
+  <text x="384" y="118" text-anchor="end" font-size="12.5" font-weight="700" fill="#1b5e20">300,000,000</text>
+  <text x="36" y="140" font-size="12.5" fill="#555">대출 상환</text>
+  <text x="384" y="140" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△70,000,000</text>
+
+  <line x1="210" y1="162" x2="210" y2="186" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <!-- B: 잔금일 지출 (y=190, h=128) -->
+  <rect x="20" y="190" width="380" height="128" rx="10" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="165" y="200" width="90" height="20" rx="5" fill="#ffe082"/>
+  <text x="210" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#bf360c">잔금일 지출</text>
+  <text x="210" y="242" text-anchor="middle" font-size="20" font-weight="800" fill="#bf360c">498,540,000</text>
+  <line x1="36" y1="256" x2="384" y2="256" stroke="#ffe082" stroke-width="1.2"/>
+  <text x="36" y="276" font-size="12.5" fill="#555">잔금 (아파트 + 옵션)</text>
+  <text x="384" y="276" text-anchor="end" font-size="12.5" font-weight="700" fill="#bf360c">483,540,000</text>
+  <text x="36" y="298" font-size="12.5" fill="#555">중도금 대출 이자</text>
+  <text x="384" y="298" text-anchor="end" font-size="12.5" font-weight="700" fill="#bf360c">15,000,000</text>
+
+  <line x1="210" y1="320" x2="210" y2="344" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <!-- C: 잔금 후 잔액 (y=348, h=150) -->
+  <rect x="20" y="348" width="380" height="150" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="162" y="358" width="96" height="20" rx="5" fill="#90caf9"/>
+  <text x="210" y="372" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">잔금 후 잔액</text>
+  <text x="210" y="400" text-anchor="middle" font-size="20" font-weight="800" fill="#0d47a1">11,460,000</text>
+  <line x1="36" y1="414" x2="384" y2="414" stroke="#90caf9" stroke-width="1.2"/>
+  <text x="36" y="434" font-size="12.5" fill="#555">취득세 등 (예상)</text>
+  <text x="384" y="434" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△6,000,000</text>
+  <text x="36" y="456" font-size="12.5" fill="#555">가구 구입</text>
+  <text x="384" y="456" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△5,000,000</text>
+  <text x="36" y="478" font-size="12.5" fill="#555">이사 비용</text>
+  <text x="384" y="478" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△1,000,000</text>
+
+  <line x1="210" y1="500" x2="210" y2="524" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+
+  <!-- D: 최종 부족액 (y=528, h=106) -->
+  <rect x="20" y="528" width="380" height="106" rx="10" fill="#fce4ec" stroke="#e91e63" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="165" y="538" width="90" height="20" rx="5" fill="#f8bbd9"/>
+  <text x="210" y="552" text-anchor="middle" font-size="11" font-weight="700" fill="#880e4f">최종 부족액</text>
+  <text x="210" y="580" text-anchor="middle" font-size="20" font-weight="800" fill="#880e4f">△540,000</text>
+  <line x1="36" y1="594" x2="384" y2="594" stroke="#f8bbd9" stroke-width="1.2"/>
+  <text x="210" y="616" text-anchor="middle" font-size="12.5" fill="#555">입주 전 추가 확보 필요</text>
+</svg>
+</div>
+
+<h2>3. 자금수지표</h2>
+<div class="tw"><table>
+  <tr><th>구분</th><th>항목</th><th class="n">금액(원)</th></tr>
+  <tr><td>수입</td><td>기존 주택 매도대금</td><td class="n">280,000,000</td></tr>
+  <tr><td></td><td>잔금 대출</td><td class="n">300,000,000</td></tr>
+  <tr><td></td><td>대출 상환</td><td class="n neg">△70,000,000</td></tr>
+  <tr class="sum"><td colspan="2">수입 합계 (A)</td><td class="n">510,000,000</td></tr>
+  <tr><td>지출</td><td>잔금</td><td class="n">483,540,000</td></tr>
+  <tr><td></td><td>중도금 대출 이자</td><td class="n">15,000,000</td></tr>
+  <tr class="sum"><td colspan="2">지출 합계 (B)</td><td class="n">498,540,000</td></tr>
+  <tr class="sum"><td colspan="2">잔금 후 잔액 (A−B)</td><td class="n pos">11,460,000</td></tr>
+  <tr><td>입주비용</td><td>취득세 등 (예상)</td><td class="n">6,000,000</td></tr>
+  <tr><td></td><td>가구</td><td class="n">5,000,000</td></tr>
+  <tr><td></td><td>이사</td><td class="n">1,000,000</td></tr>
+  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">12,000,000</td></tr>
+  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n neg">△540,000</td></tr>
+</table></div>
+
+<h2>4. 검토 사항</h2>
+<div class="check">
+  <p><b>① 잔액 정정:</b> 510,000,000 − 498,540,000 = <b>11,460,000원</b>으로, 기존 메모의 11,000,000원보다 46만 원 많습니다. 그 결과 부족액은 100만 원이 아닌 <b>54만 원</b>입니다.</p>
+  <p><b>② 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 부족액은 약 519,390원입니다.</p>
+  <p><b>③ 중도금 이자 1,500만 원:</b> 후불제 이자 정산액은 시행사·은행에서 잔금 직전에 확정되므로 확정 금액 확인이 필요합니다.</p>
+  <p><b>④ 자금 시점:</b> 매도대금 2.8억이 잔금일 이후 들어오면 일시적 자금 공백이 생기므로 매도 잔금일과 입주 잔금일을 맞추거나 브릿지 자금을 준비해야 합니다.</p>
+  <p><b>⑤ 대출 한도:</b> 잔금 대출 3억 원은 감정가·DSR 심사 후 확정되므로 사전 한도 조회를 권장합니다.</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#43a047;"></div>자금 조달</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f9a825;"></div>잔금일 지출</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e88e5;"></div>잔금 후 잔액 · 입주비용</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e91e63;"></div>최종 부족액</div>
+</div>
+
+<div class="note">
+  ※ 출처: 힐스테이트 첨단센트럴 아파트 공급계약서(NO.A 1146), 발코니 확장 및 선택품목 계약서(NO.C 1130), 작성자 자금계획 메모<br>
+  ※ 취득세는 1주택·개인 취득 가정 예상치이며 실제 금액은 신고 시 확정 | 기준일: 2026.09.25
+</div>
+
+</body>
+</html>
