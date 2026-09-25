@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>잔금대출 상환스케줄</title>
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#1a2940; --sub:#6b7a8d; --line:#dde3ea;
+  --th:#37474f; --thbg:#f4f6f9; --neg:#c62828; --pos:#1b5e20; --acc:#1565c0; --accbg:#e3f2fd;
+  --warnbg:#fff8e1; --warnbd:#f9a825; --prin:#1e88e5; --int:#f9a825;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+    --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --acc:#90caf9; --accbg:#1d3348;
+    --warnbg:#2e2a1a; --warnbd:#c79a1e; --prin:#64b5f6; --int:#ffca28;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+  --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --acc:#90caf9; --accbg:#1d3348;
+  --warnbg:#2e2a1a; --warnbd:#c79a1e; --prin:#64b5f6; --int:#ffca28;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  padding-block:32px 50px;padding-inline:24px;max-width:860px;}
+h1{font-size:22px;margin:0 0 6px;text-wrap:balance;}
+.subtitle{font-size:13px;color:var(--sub);margin-bottom:24px;}
+h2{font-size:15px;margin:30px 0 10px;border-left:4px solid var(--acc);padding-left:8px;}
+.form{background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;padding:14px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+.form label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--sub);}
+.form input,.form select{font:inherit;font-size:14px;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;font-variant-numeric:tabular-nums;}
+.form input:focus-visible,.form select:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:1px;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px;}
+.kpi{background:var(--card);border-radius:10px;padding:14px 16px;box-shadow:0 3px 10px #00000014;}
+.kpi .l{font-size:12px;color:var(--sub);}
+.kpi .v{font-size:19px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums;}
+.kpi .s{font-size:11.5px;color:var(--sub);margin-top:2px;}
+.kpi.int .v{color:var(--neg);}
+.tw{overflow-x:auto;background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;}
+table{border-collapse:collapse;width:100%;font-size:12.5px;}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);line-height:20px;white-space:nowrap;}
+th{background:var(--thbg);color:var(--th);text-align:left;font-weight:700;position:sticky;top:0;}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;}
+tr.cur td{background:var(--accbg);font-weight:700;}
+tr.sum td{font-weight:800;background:var(--thbg);}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;min-width:90px;background:var(--line);}
+.bar i{display:block;height:100%;}
+.bar .p{background:var(--prin);} .bar .i{background:var(--int);}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin:0 0 8px;}
+.legend span{display:flex;align-items:center;gap:6px;}
+.legend b{width:12px;height:12px;border-radius:3px;display:inline-block;}
+details{margin-top:12px;}
+summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);padding:6px 0;}
+.scroll{max-height:520px;overflow:auto;}
+.check{background:var(--warnbg);border:1px solid var(--warnbd);border-radius:10px;padding:12px 16px;font-size:12.5px;line-height:22px;}
+.check p{margin:0 0 8px;} .check p:last-child{margin:0;}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.nav a{font-size:12.5px;font-weight:700;text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:var(--card);}
+.nav a[aria-current]{background:#1565c0;border-color:#1565c0;color:#fff;}
+.nav a:hover{border-color:#1565c0;}
+.nav a:focus-visible,.xlink:focus-visible{outline:2px solid #1565c0;outline-offset:2px;}
+.xlink{color:#1565c0;font-weight:700;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .xlink{color:#90caf9;}}
+:root[data-theme="dark"] .xlink{color:#90caf9;}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="힐스테이트 문서"><a href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a><a href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco" aria-current="page">대출 상환스케줄</a></nav>
+
+<h1>힐스테이트 첨단센트럴 잔금대출 상환스케줄</h1>
+<div class="subtitle">잔금 대출 3억 원 · 변동금리 연 4.4% 가정 · 작성기준일 2026.09.25</div>
+
+<form class="form" id="f" autocomplete="off">
+  <label for="amt">대출금액(원)<input id="amt" inputmode="numeric" value="300,000,000"></label>
+  <label for="rate">연 금리(%)<input id="rate" type="number" step="0.05" min="0" value="4.4"></label>
+  <label for="yrs">대출기간
+    <select id="yrs"><option value="10">10년</option><option value="20">20년</option><option value="30" selected>30년</option><option value="40">40년</option></select>
+  </label>
+  <label for="grace">거치기간
+    <select id="grace"><option value="0" selected>없음</option><option value="1">1년</option><option value="2">2년</option><option value="3">3년</option></select>
+  </label>
+  <label for="method">상환방식
+    <select id="method"><option value="eq" selected>원리금균등</option><option value="pr">원금균등</option></select>
+  </label>
+</form>
+
+<div class="kpis" id="kpis"></div>
+
+<h2>1. 금리 변동 시 월 상환액</h2>
+<div class="tw"><table id="sens"></table></div>
+
+<h2>2. 연도별 상환 요약</h2>
+<div class="legend"><span><b style="background:var(--prin)"></b>원금</span><span><b style="background:var(--int)"></b>이자</span></div>
+<div class="tw scroll"><table id="yearly"></table></div>
+
+<details id="monthlyWrap">
+  <summary>월별 상세 스케줄 펼치기</summary>
+  <div class="tw scroll"><table id="monthly"></table></div>
+</details>
+
+<h2>3. 검토 사항</h2>
+<div class="check">
+  <p><b>① 변동금리:</b> 이 표는 대출기간 내내 입력한 금리가 유지된다고 가정합니다. 실제로는 COFIX 등 기준금리가 바뀔 때마다(보통 6개월·12개월 주기) 남은 원금과 기간으로 월 상환액이 다시 계산됩니다. 금리가 0.5%p 오르내릴 때의 차이는 1번 표를 참고하세요.</p>
+  <p><b>② 원 단위 처리:</b> 월 이자는 잔액 × 연 금리 ÷ 12를 원 단위로 반올림했고, 끝전은 마지막 회차에서 정리합니다. 은행 실제 스케줄과 몇 원 차이가 날 수 있습니다.</p>
+  <p><b>③ 제외 항목:</b> 중도상환수수료, 인지세, 근저당 설정비, 보증료는 포함하지 않았습니다.</p>
+  <p><b>④ 자금계획 연계:</b> <a class="xlink" href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a>의 잔금 후 여유자금(약 1,172만 원)은 입주 초기 월 상환액의 약 7~8개월분입니다. 첫 상환일은 보통 대출 실행 한 달 뒤입니다.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const won=v=>Math.round(v).toLocaleString('ko-KR');
+function parseAmt(){const v=Number(String($('amt').value).replace(/[^0-9]/g,''));return v>0?v:0;}
+
+function schedule(P,ratePct,yrs,graceYrs,method){
+  const r=ratePct/100/12,n=yrs*12,g=Math.min(graceYrs*12,n-1),m=n-g;
+  const rows=[];let bal=P;
+  const pmt=r===0?P/m:P*r/(1-Math.pow(1+r,-m));
+  const prinEq=P/m;
+  for(let k=1;k<=n;k++){
+    const it=Math.round(bal*r);let pr;
+    if(k<=g)pr=0;
+    else if(k===n)pr=bal;
+    else pr=method==='eq'?Math.round(pmt)-it:Math.round(prinEq);
+    bal-=pr;
+    rows.push({k,pr,it,pay:pr+it,bal});
+  }
+  return rows;
+}
+function totals(rows){return rows.reduce((a,x)=>{a.pr+=x.pr;a.it+=x.it;return a},{pr:0,it:0});}
+
+function render(){
+  const P=parseAmt(),rate=Number($('rate').value)||0,yrs=Number($('yrs').value),
+        grace=Number($('grace').value),method=$('method').value;
+  const rows=schedule(P,rate,yrs,grace,method),t=totals(rows);
+  const firstPay=rows.find(x=>x.pr>0)||rows[0];
+  const g=grace*12;
+  const mName=method==='eq'?'원리금균등':'원금균등';
+
+  $('kpis').innerHTML=
+    (g?`<div class="kpi"><div class="l">거치기간 월 이자</div><div class="v">${won(rows[0].pay)}</div><div class="s">1~${g}회차</div></div>`:'')+
+    `<div class="kpi"><div class="l">${g?'거치 후 ':''}첫 달 월 상환액</div><div class="v">${won(firstPay.pay)}</div><div class="s">원금 ${won(firstPay.pr)} + 이자 ${won(firstPay.it)}</div></div>`+
+    (method==='pr'?`<div class="kpi"><div class="l">마지막 달 상환액</div><div class="v">${won(rows[rows.length-1].pay)}</div><div class="s">${rows.length}회차</div></div>`:'')+
+    `<div class="kpi int"><div class="l">총 이자</div><div class="v">${won(t.it)}</div><div class="s">원금 대비 ${(t.it/P*100).toFixed(1)}%</div></div>`+
+    `<div class="kpi"><div class="l">총 상환액</div><div class="v">${won(t.pr+t.it)}</div><div class="s">${yrs}년 · ${mName}</div></div>`;
+
+  // 금리 민감도
+  const rates=[-1,-0.5,0,0.5,1].map(d=>Math.round((rate+d)*100)/100).filter(x=>x>=0);
+  let s=`<tr><th>연 금리</th><th class="n">${g?'거치 후 ':''}첫 달 상환액</th><th class="n">현재 금리 대비</th><th class="n">총 이자</th></tr>`;
+  for(const rt of rates){
+    const rr=schedule(P,rt,yrs,grace,method),f=rr.find(x=>x.pr>0)||rr[0],tt=totals(rr),d=f.pay-firstPay.pay;
+    s+=`<tr class="${rt===rate?'cur':''}"><td>${rt.toFixed(2)}%${rt===rate?' (현재)':''}</td><td class="n">${won(f.pay)}</td><td class="n">${d===0?'-':(d>0?'+':'△')+won(Math.abs(d))}</td><td class="n">${won(tt.it)}</td></tr>`;
+  }
+  $('sens').innerHTML=s;
+
+  // 연도별
+  let y=`<tr><th>연차</th><th class="n">연간 원금</th><th class="n">연간 이자</th><th class="n">연간 합계</th><th>원금:이자</th><th class="n">연말 잔액</th></tr>`;
+  for(let i=0;i<yrs;i++){
+    const seg=rows.slice(i*12,i*12+12),a=totals(seg),tot=a.pr+a.it,pp=tot?a.pr/tot*100:0;
+    y+=`<tr><td>${i+1}년차</td><td class="n">${won(a.pr)}</td><td class="n">${won(a.it)}</td><td class="n">${won(tot)}</td><td><div class="bar" role="img" aria-label="원금 ${pp.toFixed(0)}%"><i class="p" style="width:${pp}%"></i><i class="i" style="width:${100-pp}%"></i></div></td><td class="n">${won(seg[seg.length-1].bal)}</td></tr>`;
+  }
+  y+=`<tr class="sum"><td>합계</td><td class="n">${won(t.pr)}</td><td class="n">${won(t.it)}</td><td class="n">${won(t.pr+t.it)}</td><td></td><td class="n">0</td></tr>`;
+  $('yearly').innerHTML=y;
+
+  // 월별
+  let mm=`<tr><th>회차</th><th class="n">원금</th><th class="n">이자</th><th class="n">월 상환액</th><th class="n">잔액</th></tr>`;
+  for(const x of rows)mm+=`<tr><td>${x.k}</td><td class="n">${won(x.pr)}</td><td class="n">${won(x.it)}</td><td class="n">${won(x.pay)}</td><td class="n">${won(x.bal)}</td></tr>`;
+  $('monthly').innerHTML=mm;
+}
+
+$('f').addEventListener('submit',e=>e.preventDefault());
+$('amt').addEventListener('input',()=>{const v=parseAmt();$('amt').value=v?v.toLocaleString('ko-KR'):'';render();});
+['rate','yrs','grace','method'].forEach(id=>$(id).addEventListener('input',render));
+render();
+</script>
+<script>
+(function(){
+  var h=location.hostname;
+  if(location.protocol==='file:'||/\.github\.io$/.test(h))return;
+  document.querySelectorAll('a[data-art]').forEach(function(a){a.href=a.dataset.art;a.target='_blank';a.rel='noopener';});
+})();
+</script>
+</body>
+</html>

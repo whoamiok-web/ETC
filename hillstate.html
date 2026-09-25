@@ -51,9 +51,19 @@ tr.sub td{color:var(--sub);}
 .legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);}
 .legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
 .note{margin-top:12px;font-size:11.5px;color:#999;line-height:1.8;}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.nav a{font-size:12.5px;font-weight:700;text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:var(--card);}
+.nav a[aria-current]{background:#1565c0;border-color:#1565c0;color:#fff;}
+.nav a:hover{border-color:#1565c0;}
+.nav a:focus-visible,.xlink:focus-visible{outline:2px solid #1565c0;outline-offset:2px;}
+.xlink{color:#1565c0;font-weight:700;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .xlink{color:#90caf9;}}
+:root[data-theme="dark"] .xlink{color:#90caf9;}
 </style>
 </head>
 <body>
+
+<nav class="nav" aria-label="힐스테이트 문서"><a href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ" aria-current="page">잔금 자금계획</a><a href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco">대출 상환스케줄</a></nav>
 
 <h1>힐스테이트 첨단센트럴 잔금 자금계획</h1>
 <div class="subtitle">0111동 1303호 · 84A · 입주예정 2026년 10월 · 작성기준일 2026.09.25</div>
@@ -150,7 +160,7 @@ tr.sub td{color:var(--sub);}
 <div class="tw"><table>
   <tr><th>구분</th><th>항목</th><th class="n">금액(원)</th></tr>
   <tr><td>수입</td><td>기존 주택 매도대금</td><td class="n">280,000,000</td></tr>
-  <tr><td></td><td>잔금 대출</td><td class="n">300,000,000</td></tr>
+  <tr><td></td><td>잔금 대출 <span style="font-size:11.5px">(<a class="xlink" href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco">상환스케줄</a>)</span></td><td class="n">300,000,000</td></tr>
   <tr><td></td><td>어머니 지원</td><td class="n">15,000,000</td></tr>
   <tr><td></td><td>대출 상환</td><td class="n neg">△70,000,000</td></tr>
   <tr class="sum"><td colspan="2">수입 합계 (A)</td><td class="n">525,000,000</td></tr>
@@ -172,7 +182,7 @@ tr.sub td{color:var(--sub);}
   <p><b>② 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 잉여액은 약 11,742,610원입니다.</p>
   <p><b>③ 중도금 이자 1,600만 원:</b> 후불제 이자 정산액은 시행사·은행에서 잔금 직전에 확정되므로 확정 금액 확인이 필요합니다.</p>
   <p><b>④ 자금 시점:</b> 매도대금 2.8억이 잔금일 이후 들어오면 일시적 자금 공백이 생기므로 매도 잔금일과 입주 잔금일을 맞추거나 브릿지 자금을 준비해야 합니다.</p>
-  <p><b>⑤ 대출 한도:</b> 잔금 대출 3억 원은 감정가·DSR 심사 후 확정되므로 사전 한도 조회를 권장합니다.</p>
+  <p><b>⑤ 대출 한도:</b> 잔금 대출 3억 원은 감정가·DSR 심사 후 확정되므로 사전 한도 조회를 권장합니다. 연 4.4%·30년·원리금균등 기준 월 상환액은 <b>1,502,283원</b>이며, 금리별·연도별 상세는 <a class="xlink" href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco">대출 상환스케줄</a>에서 확인할 수 있습니다.</p>
   <p><b>⑥ 매도 중개수수료:</b> 매도가 2.8억 원의 법정 상한은 0.4%인 112만 원(부가세 10% 포함 시 123.2만 원)입니다. 150만 원은 상한보다 약 27만 원 많은 보수적 추정치이며, 협의에 따라 더 낮아질 수 있습니다.</p>
 </div>
 
@@ -188,5 +198,12 @@ tr.sub td{color:var(--sub);}
   ※ 취득세는 1주택·개인 취득 가정 예상치이며 실제 금액은 신고 시 확정 | 기준일: 2026.09.25
 </div>
 
+<script>
+(function(){
+  var h=location.hostname;
+  if(location.protocol==='file:'||/\.github\.io$/.test(h))return;
+  document.querySelectorAll('a[data-art]').forEach(function(a){a.href=a.dataset.art;a.target='_blank';a.rel='noopener';});
+})();
+</script>
 </body>
 </html>
