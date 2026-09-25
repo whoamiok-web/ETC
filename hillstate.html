@@ -75,7 +75,7 @@ tr.due td{background:#fce4ec33;}
   <div class="kpi"><div class="l">시행사 납부 예정액 (안내장)</div><div class="v">202,368,217</div></div>
   <div class="kpi"><div class="l">잔금일 필요자금 (중도금 대출 상환 포함)</div><div class="v">498,768,217</div></div>
   <div class="kpi"><div class="l">자금 조달액</div><div class="v">525,000,000</div></div>
-  <div class="kpi pos"><div class="l">입주비용 반영 후 잉여액</div><div class="v">11,731,783</div></div>
+  <div class="kpi pos"><div class="l">입주비용 반영 후 잉여액</div><div class="v">11,301,783</div></div>
 </div>
 
 <h2>1. 잔금 납부 안내장 청구내역</h2>
@@ -109,7 +109,7 @@ tr.due td{background:#fce4ec33;}
 
 <h2>3. 자금 흐름</h2>
 <div class="svgwrap">
-<svg viewBox="0 0 420 734" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
+<svg viewBox="0 0 420 756" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
   <defs>
     <filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/></filter>
     <marker id="arr-gray" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L0,8 L10,4 z" fill="#78909c"/></marker>
@@ -149,8 +149,8 @@ tr.due td{background:#fce4ec33;}
 
   <line x1="210" y1="386" x2="210" y2="410" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
 
-  <!-- C: 잔금 후 잔액 (y=414, h=172) -->
-  <rect x="20" y="414" width="380" height="172" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
+  <!-- C: 잔금 후 잔액 (y=414, h=194) -->
+  <rect x="20" y="414" width="380" height="194" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
   <rect x="162" y="424" width="96" height="20" rx="5" fill="#90caf9"/>
   <text x="210" y="438" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">잔금 후 잔액</text>
   <text x="210" y="466" text-anchor="middle" font-size="20" font-weight="800" fill="#0d47a1">26,231,783</text>
@@ -163,16 +163,18 @@ tr.due td{background:#fce4ec33;}
   <text x="384" y="544" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△1,000,000</text>
   <text x="36" y="566" font-size="12.5" fill="#555">기존 주택 매도 중개수수료</text>
   <text x="384" y="566" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△1,500,000</text>
+  <text x="36" y="588" font-size="12.5" fill="#555">선수관리비 (관리비 예치금)</text>
+  <text x="384" y="588" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△430,000</text>
 
-  <line x1="210" y1="588" x2="210" y2="612" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+  <line x1="210" y1="610" x2="210" y2="634" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
 
-  <!-- D: 최종 잉여액 (y=616, h=106) -->
-  <rect x="20" y="616" width="380" height="106" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" filter="url(#sh)"/>
-  <rect x="165" y="626" width="90" height="20" rx="5" fill="#a5d6a7"/>
-  <text x="210" y="640" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">최종 잉여액</text>
-  <text x="210" y="668" text-anchor="middle" font-size="20" font-weight="800" fill="#1b5e20">11,731,783</text>
-  <line x1="36" y1="682" x2="384" y2="682" stroke="#a5d6a7" stroke-width="1.2"/>
-  <text x="210" y="704" text-anchor="middle" font-size="12.5" fill="#555">입주비용 지출 후 여유자금</text>
+  <!-- D: 최종 잉여액 (y=638, h=106) -->
+  <rect x="20" y="638" width="380" height="106" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="165" y="648" width="90" height="20" rx="5" fill="#a5d6a7"/>
+  <text x="210" y="662" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">최종 잉여액</text>
+  <text x="210" y="690" text-anchor="middle" font-size="20" font-weight="800" fill="#1b5e20">11,301,783</text>
+  <line x1="36" y1="704" x2="384" y2="704" stroke="#a5d6a7" stroke-width="1.2"/>
+  <text x="210" y="726" text-anchor="middle" font-size="12.5" fill="#555">입주비용 지출 후 여유자금</text>
 </svg>
 </div>
 
@@ -195,17 +197,18 @@ tr.due td{background:#fce4ec33;}
   <tr><td></td><td>가구</td><td class="n">6,000,000</td></tr>
   <tr><td></td><td>이사</td><td class="n">1,000,000</td></tr>
   <tr><td></td><td>기존 주택 매도 중개수수료</td><td class="n">1,500,000</td></tr>
-  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">14,500,000</td></tr>
-  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n pos">11,731,783</td></tr>
+  <tr><td></td><td>선수관리비 (84A, 매도 시 환급)</td><td class="n">430,000</td></tr>
+  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">14,930,000</td></tr>
+  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n pos">11,301,783</td></tr>
 </table></div>
 
 <h2>5. 검토 사항</h2>
 <div class="check">
-  <p><b>① 안내장 반영 결과:</b> 시행사에 낼 금액은 잔금 148,200,000 + 옵션 미납 38,178,000 + 후불이자 15,990,217 = <b>202,368,217원</b>입니다. 기존 계획의 후불이자 추정치 1,600만 원보다 9,783원 적어, 최종 잉여액은 11,722,000원에서 <b>11,731,783원</b>으로 늘었습니다.</p>
+  <p><b>① 안내장 반영 결과:</b> 시행사에 낼 금액은 잔금 148,200,000 + 옵션 미납 38,178,000 + 후불이자 15,990,217 = <b>202,368,217원</b>입니다. 기존 계획의 후불이자 추정치 1,600만 원보다 9,783원 적어, 최종 잉여액은 11,722,000원에서 11,731,783원으로 늘었습니다. 여기에 입주증 발급 요건인 선수관리비 43만 원을 더해 입주비용은 1,493만 원, 최종 잉여액은 <b>11,301,783원</b>입니다.</p>
   <p><b>② 중도금 대출 상환:</b> 중도금 1~6차 296,400,000원은 중도금 대출로 납부된 것으로 보고, 잔금일에 잔금 대출 등으로 상환하는 것으로 계산했습니다. 은행에서 잔금일 기준 중도금 대출 상환액을 확인해 주세요. 잔금 대출이 중도금 대출을 대환하는 방식이면 실제 현금 흐름은 같습니다.</p>
   <p><b>③ 후불이자 변동:</b> 후불이자 15,990,217원은 2026.09.07 기준입니다. 납부일이 늦어질수록 늘어나므로 납부 직전에 시행사(1877-8555)에 확정 금액을 확인해야 합니다.</p>
   <p><b>④ 납부 기간과 입금 방법:</b> 잔금 납부기간은 2026.10.30 ~ 2027.01.29입니다. 입금할 때는 입금자명에 동호수와 계약자명을 함께 적어야 합니다(예: 0111동 1303호 → 01111303홍길동). 아파트 잔금, 옵션, 후불이자는 입금 계좌가 각각 다르니 안내장의 계좌를 확인하세요.</p>
-  <p><b>⑤ 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 잉여액은 약 11,752,393원입니다.</p>
+  <p><b>⑤ 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 잉여액은 약 11,322,393원입니다.</p>
   <p><b>⑥ 자금 시점:</b> 매도대금 2.8억이 잔금일 이후 들어오면 일시적 자금 공백이 생기므로 매도 잔금일과 입주 잔금일을 맞추거나 브릿지 자금을 준비해야 합니다.</p>
   <p><b>⑦ 대출 한도:</b> 잔금 대출 3억 원은 감정가·DSR 심사 후 확정되므로 사전 한도 조회를 권장합니다. 연 4.4%·30년·원리금균등 기준 월 상환액은 <b>1,502,283원</b>이며, 금리별·연도별 상세는 <a class="xlink" href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco">대출 상환스케줄</a>에서 확인할 수 있습니다.</p>
   <p><b>⑧ 매도 중개수수료:</b> 매도가 2.8억 원의 법정 상한은 0.4%인 112만 원(부가세 10% 포함 시 123.2만 원)입니다. 150만 원은 상한보다 약 27만 원 많은 보수적 추정치이며, 협의에 따라 더 낮아질 수 있습니다.</p>
@@ -214,7 +217,7 @@ tr.due td{background:#fce4ec33;}
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:#43a047;"></div>자금 조달</div>
   <div class="legend-item"><div class="legend-dot" style="background:#f9a825;"></div>잔금일 지출</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1e88e5;"></div>잔금 후 잔액 · 입주비용(중개수수료 포함)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e88e5;"></div>잔금 후 잔액 · 입주비용(중개수수료·선수관리비 포함)</div>
   <div class="legend-item"><div class="legend-dot" style="background:#2e7d32;"></div>최종 잉여액</div>
 </div>
 
