@@ -62,7 +62,7 @@ tr.sub td{color:var(--sub);}
   <div class="kpi"><div class="l">총 분양대금 (옵션 포함)</div><div class="v">548,540,000</div></div>
   <div class="kpi"><div class="l">잔금일 필요자금</div><div class="v">498,778,000</div></div>
   <div class="kpi"><div class="l">자금 조달액</div><div class="v">510,000,000</div></div>
-  <div class="kpi neg"><div class="l">입주비용 반영 후 부족액</div><div class="v">△778,000</div></div>
+  <div class="kpi neg"><div class="l">입주비용 반영 후 부족액</div><div class="v">△3,278,000</div></div>
 </div>
 
 <h2>1. 분양대금 및 납부 현황</h2>
@@ -80,7 +80,7 @@ tr.sub td{color:var(--sub);}
 
 <h2>2. 자금 흐름</h2>
 <div class="svgwrap">
-<svg viewBox="0 0 420 650" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
+<svg viewBox="0 0 420 672" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
   <defs>
     <filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/></filter>
     <marker id="arr-gray" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L0,8 L10,4 z" fill="#78909c"/></marker>
@@ -114,8 +114,8 @@ tr.sub td{color:var(--sub);}
 
   <line x1="210" y1="320" x2="210" y2="344" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
 
-  <!-- C: 잔금 후 잔액 (y=348, h=150) -->
-  <rect x="20" y="348" width="380" height="150" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
+  <!-- C: 잔금 후 잔액 (y=348, h=172) -->
+  <rect x="20" y="348" width="380" height="172" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
   <rect x="162" y="358" width="96" height="20" rx="5" fill="#90caf9"/>
   <text x="210" y="372" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">잔금 후 잔액</text>
   <text x="210" y="400" text-anchor="middle" font-size="20" font-weight="800" fill="#0d47a1">11,222,000</text>
@@ -123,19 +123,21 @@ tr.sub td{color:var(--sub);}
   <text x="36" y="434" font-size="12.5" fill="#555">취득세 등 (예상)</text>
   <text x="384" y="434" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△6,000,000</text>
   <text x="36" y="456" font-size="12.5" fill="#555">가구 구입</text>
-  <text x="384" y="456" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△5,000,000</text>
+  <text x="384" y="456" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△6,000,000</text>
   <text x="36" y="478" font-size="12.5" fill="#555">이사 비용</text>
   <text x="384" y="478" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△1,000,000</text>
+  <text x="36" y="500" font-size="12.5" fill="#555">기존 주택 매도 중개수수료</text>
+  <text x="384" y="500" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△1,500,000</text>
 
-  <line x1="210" y1="500" x2="210" y2="524" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+  <line x1="210" y1="522" x2="210" y2="546" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
 
-  <!-- D: 최종 부족액 (y=528, h=106) -->
-  <rect x="20" y="528" width="380" height="106" rx="10" fill="#fce4ec" stroke="#e91e63" stroke-width="1.5" filter="url(#sh)"/>
-  <rect x="165" y="538" width="90" height="20" rx="5" fill="#f8bbd9"/>
-  <text x="210" y="552" text-anchor="middle" font-size="11" font-weight="700" fill="#880e4f">최종 부족액</text>
-  <text x="210" y="580" text-anchor="middle" font-size="20" font-weight="800" fill="#880e4f">△778,000</text>
-  <line x1="36" y1="594" x2="384" y2="594" stroke="#f8bbd9" stroke-width="1.2"/>
-  <text x="210" y="616" text-anchor="middle" font-size="12.5" fill="#555">입주 전 추가 확보 필요</text>
+  <!-- D: 최종 부족액 (y=550, h=106) -->
+  <rect x="20" y="550" width="380" height="106" rx="10" fill="#fce4ec" stroke="#e91e63" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="165" y="560" width="90" height="20" rx="5" fill="#f8bbd9"/>
+  <text x="210" y="574" text-anchor="middle" font-size="11" font-weight="700" fill="#880e4f">최종 부족액</text>
+  <text x="210" y="602" text-anchor="middle" font-size="20" font-weight="800" fill="#880e4f">△3,278,000</text>
+  <line x1="36" y1="616" x2="384" y2="616" stroke="#f8bbd9" stroke-width="1.2"/>
+  <text x="210" y="638" text-anchor="middle" font-size="12.5" fill="#555">입주 전 추가 확보 필요</text>
 </svg>
 </div>
 
@@ -151,25 +153,27 @@ tr.sub td{color:var(--sub);}
   <tr class="sum"><td colspan="2">지출 합계 (B)</td><td class="n">498,778,000</td></tr>
   <tr class="sum"><td colspan="2">잔금 후 잔액 (A−B)</td><td class="n pos">11,222,000</td></tr>
   <tr><td>입주비용</td><td>취득세 등 (예상)</td><td class="n">6,000,000</td></tr>
-  <tr><td></td><td>가구</td><td class="n">5,000,000</td></tr>
+  <tr><td></td><td>가구</td><td class="n">6,000,000</td></tr>
   <tr><td></td><td>이사</td><td class="n">1,000,000</td></tr>
-  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">12,000,000</td></tr>
-  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n neg">△778,000</td></tr>
+  <tr><td></td><td>기존 주택 매도 중개수수료</td><td class="n">1,500,000</td></tr>
+  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">14,500,000</td></tr>
+  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n neg">△3,278,000</td></tr>
 </table></div>
 
 <h2>4. 검토 사항</h2>
 <div class="check">
-  <p><b>① 기납부 금액 반영:</b> 계약금 1차 1,000만 원 + 계약금 2차 3,940만 원 + 옵션 계약금 1,636.2만 원 = <b>65,762,000원</b>을 반영해 잔금은 482,778,000원입니다. 잔금 후 잔액은 510,000,000 − 498,778,000 = <b>11,222,000원</b>이고, 입주비용 1,200만 원을 빼면 <b>77.8만 원이 부족합니다</b>.</p>
-  <p><b>② 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 부족액은 약 757,390원입니다.</p>
+  <p><b>① 기납부 금액 반영:</b> 계약금 1차 1,000만 원 + 계약금 2차 3,940만 원 + 옵션 계약금 1,636.2만 원 = <b>65,762,000원</b>을 반영해 잔금은 482,778,000원입니다. 잔금 후 잔액은 510,000,000 − 498,778,000 = <b>11,222,000원</b>이고, 입주비용 1,450만 원(취득세 600만 + 가구 600만 + 이사 100만 + 매도 중개수수료 150만)을 빼면 <b>327.8만 원이 부족합니다</b>.</p>
+  <p><b>② 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 부족액은 약 3,257,390원입니다.</p>
   <p><b>③ 중도금 이자 1,600만 원:</b> 후불제 이자 정산액은 시행사·은행에서 잔금 직전에 확정되므로 확정 금액 확인이 필요합니다.</p>
   <p><b>④ 자금 시점:</b> 매도대금 2.8억이 잔금일 이후 들어오면 일시적 자금 공백이 생기므로 매도 잔금일과 입주 잔금일을 맞추거나 브릿지 자금을 준비해야 합니다.</p>
   <p><b>⑤ 대출 한도:</b> 잔금 대출 3억 원은 감정가·DSR 심사 후 확정되므로 사전 한도 조회를 권장합니다.</p>
+  <p><b>⑥ 매도 중개수수료:</b> 매도가 2.8억 원의 법정 상한은 0.4%인 112만 원(부가세 10% 포함 시 123.2만 원)입니다. 150만 원은 상한보다 약 27만 원 많은 보수적 추정치이며, 협의에 따라 더 낮아질 수 있습니다.</p>
 </div>
 
 <div class="legend">
   <div class="legend-item"><div class="legend-dot" style="background:#43a047;"></div>자금 조달</div>
   <div class="legend-item"><div class="legend-dot" style="background:#f9a825;"></div>잔금일 지출</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1e88e5;"></div>잔금 후 잔액 · 입주비용</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e88e5;"></div>잔금 후 잔액 · 입주비용(중개수수료 포함)</div>
   <div class="legend-item"><div class="legend-dot" style="background:#e91e63;"></div>최종 부족액</div>
 </div>
 
