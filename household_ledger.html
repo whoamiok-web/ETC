@@ -104,6 +104,7 @@ td.num,th.num{text-align:right;white-space:nowrap;}
 .kpi.neg .v{color:var(--neg);} .kpi.pos .v{color:var(--pos);}
 .monthbar{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 14px;}
 .monthbar b{font-size:17px;min-width:110px;text-align:center;}
+.monthbar b small{display:block;font-size:11.5px;font-weight:600;color:var(--sub);margin-top:1px;}
 .monthbar button{padding:6px 12px;}
 .bars .b{display:grid;grid-template-columns:92px 1fr 96px;gap:8px;align-items:center;font-size:13px;margin:7px 0;}
 .bars .tr{height:12px;background:var(--thbg);border-radius:6px;overflow:hidden;}
@@ -303,6 +304,16 @@ service cloud.firestore {
     </div>
   </div>
 
+  <h2>한 달 기준</h2>
+  <div class="card">
+    <div class="row">
+      <span style="font-size:13.5px">매달</span>
+      <select id="startDaySel" onchange="saveStartDay(this.value)"></select>
+      <span style="font-size:13.5px">일부터 다음 달 전날까지</span>
+    </div>
+    <div class="muted" id="startDayEx" style="margin-top:6px"></div>
+  </div>
+
   <h2>월 예산</h2>
   <div class="card">
     <div class="form" id="budgetForm"></div>
@@ -390,6 +401,7 @@ function load(){
     cats: d.cats || DEFAULT_CATS.slice(),
     rules: d.rules || {},        // 정규화 가맹점명 → 분류 (사용자 수정 학습)
     budgets: d.budgets || {},    // 분류 → 월 예산, '_total' → 전체
+    startDay: d.startDay || 14,  // 한 달 시작일 (14 → 당월 14일 ~ 익월 13일)
   };
 }
 function persist(){
@@ -511,6 +523,8 @@ async function initShared(){
     if (Array.isArray(d.cats) && d.cats.length) DB.cats = [...d.cats];
     DB.rules = Object.fromEntries(Object.entries(d.rules || {}).filter(([, v]) => v));
     DB.budgets = { ...(d.budgets || {}) };
+    const sd = d.startDay || 14;
+    if (sd !== DB.startDay){ DB.startDay = sd; cur = periodOf(ymd(new Date())); }
     renderAll();
   }, () => {});
 }
@@ -579,7 +593,7 @@ async function commitTx(adds = [], removes = []){
 async function commitSettings(){
   if (!S.db){ persist(); renderAll(); return true; }
   try {
-    await queued(() => S.db.collection('settings').doc('main').set(JSON.parse(JSON.stringify({ cats: DB.cats, rules: DB.rules, budgets: DB.budgets }))));
+    await queued(() => S.db.collection('settings').doc('main').set(JSON.parse(JSON.stringify({ cats: DB.cats, rules: DB.rules, budgets: DB.budgets, startDay: DB.startDay }))));
     renderAll(); return true;
   } catch(e){ toast(errMsg(e)); return false; }
 }
@@ -871,7 +885,7 @@ async function saveReview(){
   const last = adds[0];
   clearReview();
   setStatus(`💾 ${adds.length}건 저장했습니다.`);
-  if (last) cur = last.date.slice(0,7);
+  if (last) cur = periodOf(last.date);
   renderAll();
 }
 // 규칙 학습 여부 판단용: 사용자 규칙 제외한 기본 추정값
@@ -904,13 +918,25 @@ document.addEventListener('paste', e => {
 });
 
 /* ===================== 월 / 내역 ===================== */
-let cur = (() => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; })();
-function moveMonth(d){
-  let [y,m] = cur.split('-').map(Number); m += d;
-  if (m<1){m=12;y--;} if (m>12){m=1;y++;}
-  cur = `${y}-${pad(m)}`; renderAll();
+// 한 달 시작일: 14면 '9월' = 9/14 ~ 10/13 (설정 탭에서 변경, 공유 모드에서는 부부가 같은 값 사용)
+const startDay = () => Math.min(28, Math.max(1, parseInt(DB.startDay, 10) || 1));
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function periodRange(ym = cur){
+  const [y, m] = ym.split('-').map(Number), s = startDay();
+  const start = new Date(y, m-1, s), end = new Date(y, m, s-1);   // s=1이면 end는 그달 말일
+  return { start, end, from: ymd(start), to: ymd(end) };
 }
-const monthTx = (ym=cur) => DB.tx.filter(t => t.date.startsWith(ym));
+// 날짜가 속한 기간(YYYY-MM)
+function periodOf(date){
+  let [y, m, d] = date.split('-').map(Number);
+  if (d < startDay()){ m--; if (m < 1){ m = 12; y--; } }
+  return `${y}-${pad(m)}`;
+}
+function shiftYm(ym, k){ const [y, m] = ym.split('-').map(Number); const d = new Date(y, m-1+k, 1); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+const md = d => `${d.getMonth()+1}.${d.getDate()}`;
+let cur = periodOf(ymd(new Date()));
+function moveMonth(d){ cur = shiftYm(cur, d); renderAll(); }
+const monthTx = (ym=cur) => { const { from, to } = periodRange(ym); return DB.tx.filter(t => t.date >= from && t.date <= to); };
 const counted = t => !t.cancel;
 function sums(list){
   const exp = list.filter(t => t.type==='expense' && counted(t)).reduce((s,t)=>s+t.amount,0);
@@ -926,8 +952,9 @@ function kpiHtml(list){
 const users = () => [...new Set(DB.tx.map(t => t.user).filter(Boolean))].sort();
 
 function renderList(){
-  const [y,m] = cur.split('-');
-  document.querySelectorAll('.mlabel').forEach(e => e.textContent = `${y}년 ${+m}월`);
+  const [y,m] = cur.split('-'), pr = periodRange();
+  document.querySelectorAll('.mlabel').forEach(e => e.innerHTML = `${y}년 ${+m}월` +
+    (startDay() > 1 ? `<small>${md(pr.start)} ~ ${md(pr.end)}</small>` : ''));
   const list = monthTx();
   document.getElementById('listKpi').innerHTML = kpiHtml(list);
 
@@ -945,7 +972,7 @@ function renderList(){
 
   renderCalendar(rows);
   const WD = ['일','월','화','수','목','금','토'];
-  if (selDay && !selDay.startsWith(cur)) selDay = null;
+  if (selDay && (selDay < pr.from || selDay > pr.to)) selDay = null;
   document.getElementById('daySel').hidden = !selDay;
   const shown = selDay ? rows.filter(t => t.date === selDay) : rows;
   if (selDay){
@@ -977,25 +1004,26 @@ let selDay = null;   // 달력에서 고른 날짜 (YYYY-MM-DD)
 // 칸이 좁으니 10만원 이상은 '12.3만' 형태로 줄여 표시
 const short = n => n >= 100000 ? (Math.round(n/1000)/10).toLocaleString('ko-KR') + '만' : n.toLocaleString('ko-KR');
 function renderCalendar(rows){
-  const [y, m] = cur.split('-').map(Number);
-  const first = new Date(y, m-1, 1).getDay();
-  const days = new Date(y, m, 0).getDate();
-  const exp = Array(days+1).fill(0), inc = Array(days+1).fill(0);
-  rows.forEach(t => { if (!counted(t)) return; const d = +t.date.slice(8,10); (t.type==='income' ? inc : exp)[d] += t.amount; });
-  const max = Math.max(...exp, 1);
-  const now = new Date(), todayKey = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const m = +cur.split('-')[1];
+  const { start, end } = periodRange();
+  const exp = {}, inc = {};
+  rows.forEach(t => { if (!counted(t)) return; const o = t.type==='income' ? inc : exp; o[t.date] = (o[t.date]||0) + t.amount; });
+  const max = Math.max(...Object.values(exp), 1);
+  const todayKey = ymd(new Date());
   let cells = '';
-  for (let i=0;i<first;i++) cells += '<div class="c blank"></div>';
-  for (let d=1; d<=days; d++){
-    const key = `${cur}-${pad(d)}`, wd = (first + d - 1) % 7;
+  for (let i=0;i<start.getDay();i++) cells += '<div class="c blank"></div>';
+  for (const d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
+    const key = ymd(d), wd = d.getDay(), e = exp[key]||0, n = inc[key]||0;
+    // 기간 첫날과 매달 1일은 '10/1'처럼 월도 표시
+    const label = d.getTime() === start.getTime() || d.getDate() === 1 ? `${d.getMonth()+1}/${d.getDate()}` : d.getDate();
     // 지출이 클수록 진하게 (최대 지출일 기준 8~40%)
-    const bg = exp[d] ? `background:color-mix(in srgb, var(--neg) ${Math.round(8 + exp[d]/max*32)}%, transparent)` : '';
+    const bg = e ? `background:color-mix(in srgb, var(--neg) ${Math.round(8 + e/max*32)}%, transparent)` : '';
     cells += `<button class="c ${wd===0?'sun':wd===6?'sat':''} ${key===todayKey?'today':''} ${key===selDay?'sel':''}" style="${bg}"
-      onclick="pickDay('${key}')" aria-label="${m}월 ${d}일 지출 ${won(exp[d])}${inc[d]?', 수입 '+won(inc[d]):''}">
-      <span class="n">${d}</span>${exp[d] ? `<span class="e">${short(exp[d])}</span>` : ''}${inc[d] ? `<span class="i">+${short(inc[d])}</span>` : ''}</button>`;
+      onclick="pickDay('${key}')" aria-label="${d.getMonth()+1}월 ${d.getDate()}일 지출 ${won(e)}${n?', 수입 '+won(n):''}">
+      <span class="n">${label}</span>${e ? `<span class="e">${short(e)}</span>` : ''}${n ? `<span class="i">+${short(n)}</span>` : ''}</button>`;
   }
-  const spent = exp.filter(Boolean).length, total = exp.reduce((s,v)=>s+v,0);
-  const incTotal = inc.reduce((s,v)=>s+v,0);
+  const spent = Object.keys(exp).length, total = Object.values(exp).reduce((s,v)=>s+v,0);
+  const incTotal = Object.values(inc).reduce((s,v)=>s+v,0);
   // 선택한 사용자·분류·검색어를 합계 제목에 표시
   const fu = document.getElementById('fUser').value, fc = document.getElementById('fCat').value, q = document.getElementById('q').value.trim();
   const who = [fu, fc, q && `"${q}"`].filter(Boolean).join(' · ');
@@ -1039,13 +1067,15 @@ function renderStats(){
     : '<div class="empty">설정 탭에서 월 예산을 입력하면 여기에 표시됩니다.</div>';
 
   // 일별
-  const [y,m] = cur.split('-').map(Number);
-  const days = new Date(y, m, 0).getDate();
-  const daily = Array(days).fill(0);
-  exp.forEach(t => daily[+t.date.slice(8,10)-1] += t.amount);
+  const { start, end } = periodRange();
+  const dates = [];
+  for (const d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(new Date(d));
+  const byDate = {}; exp.forEach(t => byDate[t.date] = (byDate[t.date]||0) + t.amount);
+  const daily = dates.map(d => byDate[ymd(d)] || 0);
   const dmax = Math.max(...daily, 1);
-  document.getElementById('daily').innerHTML = daily.map((v,i) => `<div class="${v?'':'z'}" style="height:${v?Math.max(3,v/dmax*100):1}%" title="${m}/${i+1} ${won(v)}"></div>`).join('');
-  document.getElementById('dailyAxis').innerHTML = `<span>1일</span><span>${Math.ceil(days/2)}일</span><span>${days}일 · 최대 ${won(dmax===1?0:dmax)}</span>`;
+  const mid = dates[Math.floor(dates.length/2)];
+  document.getElementById('daily').innerHTML = daily.map((v,i) => `<div class="${v?'':'z'}" style="height:${v?Math.max(3,v/dmax*100):1}%" title="${dates[i].getMonth()+1}/${dates[i].getDate()} ${won(v)}"></div>`).join('');
+  document.getElementById('dailyAxis').innerHTML = `<span>${dates[0].getMonth()+1}/${dates[0].getDate()}</span><span>${mid.getMonth()+1}/${mid.getDate()}</span><span>${end.getMonth()+1}/${end.getDate()} · 최대 ${won(dmax===1?0:dmax)}</span>`;
 
   // 가맹점 TOP
   const top = group(t => t.merchant).slice(0,10);
@@ -1055,8 +1085,8 @@ function renderStats(){
   // 6개월 추이
   const trend = [];
   for (let k=5;k>=0;k--){
-    const d = new Date(y, m-1-k, 1), ym = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-    trend.push([`${d.getFullYear()%100}.${d.getMonth()+1}월`, sums(monthTx(ym)).exp]);
+    const ym = shiftYm(cur, -k), [ty, tm] = ym.split('-').map(Number);
+    trend.push([`${ty%100}.${tm}월`, sums(monthTx(ym)).exp]);
   }
   document.getElementById('trendBars').innerHTML = barsHtml(trend, Math.max(...trend.map(t=>t[1]),1));
 }
@@ -1105,7 +1135,7 @@ async function saveEdit(){
   const removes = old && old.date.slice(0,7) !== next.date.slice(0,7) ? [old] : [];
   if (!await commitTx([next], removes)) return;
   if (learned) await commitSettings();
-  closeEdit(); cur = rec.date.slice(0,7); renderAll();
+  closeEdit(); cur = periodOf(rec.date); renderAll();
 }
 async function delEdit(){
   const t = DB.tx.find(x => x.id === editId);
@@ -1114,7 +1144,17 @@ async function delEdit(){
 }
 
 /* ===================== 설정 ===================== */
+async function saveStartDay(v){
+  DB.startDay = Math.min(28, Math.max(1, parseInt(v, 10) || 1));
+  cur = periodOf(ymd(new Date())); selDay = null;
+  if (await commitSettings()) toast(`한 달을 매달 ${DB.startDay}일부터로 바꿨습니다.`);
+}
 function renderSettings(){
+  const sel = document.getElementById('startDaySel');
+  sel.innerHTML = Array.from({length:28}, (_, i) => `<option value="${i+1}" ${i+1===startDay()?'selected':''}>${i+1}</option>`).join('');
+  const ex = periodRange(periodOf(ymd(new Date())));
+  document.getElementById('startDayEx').textContent = startDay() === 1 ? '달력의 1일~말일을 한 달로 봅니다.'
+    : `예: 이번 기간 = ${ex.start.getMonth()+1}월 ${ex.start.getDate()}일 ~ ${ex.end.getMonth()+1}월 ${ex.end.getDate()}일 (카드 결제 기준처럼 사용)`;
   document.getElementById('budgetForm').innerHTML = [['_total','전체'], ...DB.cats.map(c=>[c,c])].map(([k,l]) =>
     `<label>${esc(l)}</label><input inputmode="numeric" data-b="${esc(k)}" placeholder="원" value="${DB.budgets[k]?DB.budgets[k].toLocaleString('ko-KR'):''}"
       oninput="const n=toNum(this.value);this.value=n?n.toLocaleString('ko-KR'):''">`).join('');
@@ -1177,6 +1217,7 @@ function importJson(input){
     (d.cats||[]).forEach(c => { if (!DB.cats.includes(c)) DB.cats.push(c); });
     Object.assign(DB.rules, d.rules||{});
     if (d.budgets) Object.assign(DB.budgets, d.budgets);
+    if (d.startDay) DB.startDay = d.startDay;
     if (await commitTx(adds) && await commitSettings()) toast(`${adds.length}건을 불러왔습니다.`);
   };
   r.readAsText(f);
