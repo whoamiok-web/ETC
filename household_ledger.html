@@ -177,7 +177,7 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
   <div class="note" style="margin-top:18px">
     <b>인식 팁</b><br>
     · 카드사 앱의 <b>알림 목록</b> 화면(가맹점 · 금액 · 날짜가 보이는 화면)을 캡쳐해 주세요.<br>
-    · <span id="ocrTip">첫 인식 때 한글 인식 데이터(약 10MB)를 내려받아 조금 걸립니다. 이후엔 빨라요.</span><br>
+    · <span>첫 인식 때 한글 인식 데이터(약 10MB)를 내려받아 조금 걸립니다. 이후엔 빨라요.</span><br>
     · 캡쳐를 겹치게 여러 장 올려도 같은 날짜·시간·금액·가맹점은 중복 저장되지 않습니다.<br>
     · 분류를 한 번 고치면, 같은 가맹점은 다음부터 그 분류로 자동 지정됩니다.
   </div>
@@ -215,6 +215,53 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
 
 <!-- ============ 설정 ============ -->
 <section class="view" id="v-set">
+  <h2>부부 공유 (무료)</h2>
+  <div class="card" id="shareOn" hidden>
+    <div style="font-size:13.5px;line-height:1.7">
+      공유 가계부에 연결되어 있습니다 · Firebase 프로젝트 <b id="shareProject"></b><br>
+      <span class="muted">아래 링크를 배우자에게 보내면, 링크를 여는 것만으로 같은 가계부가 연결됩니다. 링크를 아는 사람은 누구나 볼 수 있으니 부부끼리만 공유하세요.</span>
+    </div>
+    <input id="shareLinkBox" readonly style="width:100%;margin-top:10px;font-size:12px" onclick="this.select()">
+    <div class="row" style="margin-top:10px">
+      <button class="primary" onclick="copyShareLink()">공유 링크 복사</button>
+      <span class="sp"></span>
+      <button class="danger" onclick="disconnectShare()">이 기기 연결 끊기</button>
+    </div>
+  </div>
+  <div class="card" id="shareOff">
+    <div style="font-size:13.5px;line-height:1.7">
+      지금은 <b>이 기기에만</b> 저장됩니다. Google <b>Firebase 무료 요금제</b>를 연결하면 부부가 같은 가계부를 실시간으로 봅니다. (한 번만 설정, 약 5분)
+    </div>
+    <details open>
+      <summary>설정 방법 보기</summary>
+      <ol style="font-size:13px;line-height:1.75;padding-left:20px;margin:8px 0">
+        <li><a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase 콘솔</a>에 Google 계정으로 로그인 → <b>프로젝트 만들기</b> (이름 예: our-ledger, 애널리틱스는 꺼도 됨)</li>
+        <li>왼쪽 메뉴 <b>빌드 → Authentication → 시작하기</b> → 로그인 방법에서 <b>익명</b>을 <b>사용 설정</b> 후 저장</li>
+        <li><b>빌드 → Firestore Database → 데이터베이스 만들기</b> → 위치 <b>asia-northeast3 (서울)</b> → <b>프로덕션 모드</b>로 시작</li>
+        <li>Firestore의 <b>규칙</b> 탭에 아래 규칙을 붙여넣고 <b>게시</b></li>
+        <li>프로젝트 개요 옆 ⚙️ <b>프로젝트 설정</b> → 아래쪽 <b>내 앱</b>에서 웹(<b>&lt;/&gt;</b>) 앱 추가 → 나오는 <b>firebaseConfig</b> 부분을 복사해 아래 칸에 붙여넣기</li>
+      </ol>
+      <textarea readonly id="fbRules" style="min-height:120px" onclick="this.select()">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /households/{hid}/{rest=**} {
+      allow read, write: if request.auth != null && hid.size() >= 16;
+    }
+  }
+}</textarea>
+    </details>
+    <textarea id="fbConfig" style="margin-top:10px" placeholder='const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "our-ledger.firebaseapp.com",
+  projectId: "our-ledger",
+  ...
+};'></textarea>
+    <div class="row" style="margin-top:8px">
+      <span class="muted">배우자는 설정 없이 공유 링크만 열면 됩니다.</span><span class="sp"></span>
+      <button class="primary" onclick="connectShare()">연결하고 공유 가계부 만들기</button>
+    </div>
+  </div>
+
   <h2>월 예산</h2>
   <div class="card">
     <div class="form" id="budgetForm"></div>
@@ -333,11 +380,14 @@ function ask(msg, okLabel = '확인', danger = false){
   });
 }
 
-/* ===================== 공유 저장소 (부부 실시간 공유) =====================
- * claude.ai 에 게시된 페이지에서는 db 기능으로 모든 사람이 같은 데이터를 실시간으로 봅니다.
- * 파일로 직접 열면 이 기기 브라우저(localStorage)에만 저장됩니다.
- * 구조: months/<YYYY-MM> = { tx: { <id>: 거래 | null(삭제) } },  settings/main = { cats, rules, budgets } */
-const S = { db: null, sample: null, loaded: false };
+/* ===================== 공유 저장소 (부부 실시간 공유, 무료 Firebase) =====================
+ * 공유를 연결하지 않으면 이 기기 브라우저(localStorage)에만 저장됩니다.
+ * 연결하면 Google Firebase 무료 요금제(Spark)의 Firestore에 저장되고, 같은 공유 링크로 연 모든 기기에 실시간 반영됩니다.
+ * 구조: households/<가계부코드>/months/<YYYY-MM> = { tx: { <id>: 거래 } }
+ *       households/<가계부코드>/settings/main    = { cats, rules, budgets } */
+const SHARE_KEY = 'householdLedger.share';
+const FB_VER = '10.14.1';
+const S = { db: null, loaded: false };   // db: households/<코드> 문서 참조
 let writeChain = Promise.resolve();
 const queued = fn => (writeChain = writeChain.then(fn, fn));
 
@@ -345,28 +395,62 @@ function setSync(state, text){
   const el = document.getElementById('sync');
   el.className = 'sync ' + state; el.lastElementChild.textContent = text;
 }
-async function initShared(){
-  if (!window.claude?.use) return;
-  claude.use('sample').then(async s => {
-    if (!s) return;
-    const lim = await s.limits().catch(() => null);
-    if (lim?.images){ S.sample = s; S.imgMax = lim.images.maxCount || 1;
-      document.getElementById('ocrTip').textContent = 'Claude가 캡쳐를 읽어 입력합니다. 처음 한 번 사용 허락을 묻고, 한 번에 수십 초 걸릴 수 있어요.'; }
+function getShare(){ try { return JSON.parse(localStorage.getItem(SHARE_KEY)); } catch(e){ return null; } }
+function loadScript(src){
+  return new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src;
+    s.onload = res; s.onerror = () => rej(new Error('불러오기 실패: ' + src));
+    document.head.appendChild(s);
   });
-  const db = await claude.use('db').catch(() => null);
-  if (!db) return;
-  S.db = db;
+}
+// 공유 링크(#join=...)로 들어오면 설정을 저장하고 주소창에서 지움
+function takeJoinLink(){
+  const m = location.hash.match(/^#join=([A-Za-z0-9_-]+)$/);
+  if (!m) return;
+  try {
+    const j = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
+    if (j?.c?.apiKey && j?.c?.projectId && j?.h) localStorage.setItem(SHARE_KEY, JSON.stringify({ config: j.c, hid: j.h }));
+  } catch(e){ toast('공유 링크가 올바르지 않습니다. 링크 전체를 다시 복사해 주세요.'); }
+  history.replaceState(null, '', location.pathname + location.search);
+}
+function shareLink(){
+  const sh = getShare(); if (!sh) return '';
+  const b = btoa(unescape(encodeURIComponent(JSON.stringify({ c: sh.config, h: sh.hid })))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return location.origin + location.pathname + '#join=' + b;
+}
+async function initShared(){
+  takeJoinLink();
+  const sh = getShare();
+  renderShareBox();
+  if (!sh) return;
+  setSync('', '공유 가계부 연결 중…');
+  try {
+    if (!window.firebase?.firestore){
+      await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app-compat.js`);
+      await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-auth-compat.js`);
+      await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore-compat.js`);
+    }
+    const app = firebase.apps.find(a => a.name === 'ledger') || firebase.initializeApp(sh.config, 'ledger');
+    await app.auth().signInAnonymously();
+    const fs = app.firestore();
+    S.db = fs.collection('households').doc(sh.hid);
+  } catch(e){
+    console.error(e);
+    S.db = null;
+    setSync('err', e?.code === 'auth/operation-not-allowed' || e?.code === 'auth/admin-restricted-operation'
+      ? 'Firebase에서 익명 로그인을 켜 주세요' : '공유 연결 실패 · 이 기기에만 저장 중');
+    return;
+  }
   DB.tx = []; renderList(); renderStats();
-  setSync('', '공유 데이터 불러오는 중…');
-  document.getElementById('backupNote').textContent = '이 가계부를 함께 보는 모든 사람에게 실시간으로 공유됩니다. 백업 파일은 만일을 위한 사본입니다.';
-  db.collection('months').onSnapshot(snap => {
+  document.getElementById('backupNote').textContent = '공유 가계부는 Firebase에 저장되어 공유 링크로 연 모든 기기에 실시간 반영됩니다. 백업 파일은 만일을 위한 사본입니다.';
+  S.db.collection('months').onSnapshot(snap => {
     const tx = [];
     snap.docs.forEach(d => { for (const [id, r] of Object.entries(d.data()?.tx || {})) if (r) tx.push({ ...r, id }); });
     DB.tx = tx; S.loaded = true;
-    setSync('on', '실시간 공유 중');
+    setSync('on', snap.metadata.fromCache ? '공유 가계부 · 오프라인' : '실시간 공유 중');
     renderList(); renderStats(); renderSettingsLocalHint();
-  }, () => setSync('err', '공유 연결이 끊겼습니다. 새로고침해 주세요.'));
-  db.doc('settings/main').onSnapshot(s => {
+  }, e => { console.error(e); setSync('err', e?.code === 'permission-denied' ? 'Firestore 보안 규칙을 확인해 주세요' : '공유 연결이 끊겼습니다. 새로고침해 주세요.'); });
+  S.db.collection('settings').doc('main').onSnapshot(s => {
     if (!s.exists) return;
     const d = s.data();
     if (Array.isArray(d.cats) && d.cats.length) DB.cats = [...d.cats];
@@ -375,19 +459,50 @@ async function initShared(){
     renderAll();
   }, () => {});
 }
-const errMsg = e => e?.code === 'invalid_argument' ? '저장 권한이 없습니다. 공유 설정에서 편집 권한을 받아 주세요.'
-  : e?.code === 'quota_exceeded' ? '저장 공간이 가득 찼습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+const errMsg = e => e?.code === 'permission-denied' ? '저장 권한이 없습니다. Firestore 보안 규칙을 확인해 주세요.'
+  : e?.code === 'resource-exhausted' ? 'Firebase 무료 사용량을 넘었습니다. 내일 다시 시도해 주세요.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 
 // 한 달 문서에 거래 추가/수정(rec) 또는 삭제(null)를 병합 기록
 async function writeMonth(ym, patch){
-  const ref = S.db.doc('months/' + ym);
-  try { await ref.update({ tx: patch }); }
-  catch(e){
-    if (e?.code !== 'invalid_argument') throw e;
-    const cur = await ref.get();
-    if (cur.exists) throw e;
-    await ref.set({ tx: patch });
+  const del = firebase.firestore.FieldValue.delete();
+  const tx = Object.fromEntries(Object.entries(patch).map(([id, r]) => [id, r === null ? del : r]));
+  await S.db.collection('months').doc(ym).set({ tx }, { merge: true });
+}
+
+/* ----- 공유 설정 화면 ----- */
+function parseFirebaseConfig(text){
+  const cfg = {};
+  for (const m of String(text).matchAll(/["']?(\w+)["']?\s*:\s*["']([^"']+)["']/g)) cfg[m[1]] = m[2];
+  return cfg.apiKey && cfg.projectId ? cfg : null;
+}
+function randomCode(){
+  const a = new Uint8Array(18); crypto.getRandomValues(a);
+  return Array.from(a, b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+}
+function renderShareBox(){
+  const sh = getShare();
+  document.getElementById('shareOff').hidden = !!sh;
+  document.getElementById('shareOn').hidden = !sh;
+  if (sh){
+    document.getElementById('shareProject').textContent = sh.config.projectId;
+    document.getElementById('shareLinkBox').value = shareLink();
   }
+}
+async function connectShare(){
+  const cfg = parseFirebaseConfig(document.getElementById('fbConfig').value);
+  if (!cfg){ toast('설정값에서 apiKey와 projectId를 찾지 못했습니다. Firebase 콘솔의 firebaseConfig 전체를 붙여넣어 주세요.'); return; }
+  localStorage.setItem(SHARE_KEY, JSON.stringify({ config: cfg, hid: randomCode() }));
+  location.reload();
+}
+async function copyShareLink(){
+  const box = document.getElementById('shareLinkBox');
+  try { await navigator.clipboard.writeText(box.value); toast('공유 링크를 복사했습니다. 카카오톡 등으로 배우자에게 보내세요.'); }
+  catch(e){ box.select(); toast('링크를 길게 눌러 복사해 주세요.'); }
+}
+async function disconnectShare(){
+  if (!await ask('이 기기에서 공유 가계부 연결을 끊을까요?\n공유된 데이터는 지워지지 않으며, 공유 링크로 다시 연결할 수 있습니다.', '연결 끊기', true)) return;
+  localStorage.removeItem(SHARE_KEY);
+  location.reload();
 }
 const stripId = ({ id, ...r }) => JSON.parse(JSON.stringify(r));
 // 거래 저장/삭제의 단일 진입점
@@ -408,7 +523,7 @@ async function commitTx(adds = [], removes = []){
 async function commitSettings(){
   if (!S.db){ persist(); renderAll(); return true; }
   try {
-    await queued(() => S.db.doc('settings/main').set(JSON.parse(JSON.stringify({ cats: DB.cats, rules: DB.rules, budgets: DB.budgets }))));
+    await queued(() => S.db.collection('settings').doc('main').set(JSON.parse(JSON.stringify({ cats: DB.cats, rules: DB.rules, budgets: DB.budgets }))));
     renderAll(); return true;
   } catch(e){ toast(errMsg(e)); return false; }
 }
@@ -613,20 +728,6 @@ async function handleFiles(files){
   busy = true;
   const thumbs = document.getElementById('thumbs');
   const texts = [];
-  if (S.sample){
-    files.forEach(f => { const t = document.createElement('img'); t.src = URL.createObjectURL(f); thumbs.appendChild(t); });
-    try{
-      const found = await readWithClaude(files);
-      addPending(found);
-      setStatus(found.length ? `✅ ${found.length}건을 찾았습니다. 아래에서 확인 후 저장하세요.` : '⚠️ 승인 내역을 찾지 못했습니다. 카드 알림 목록 화면인지 확인해 주세요.');
-      busy = false; return;
-    }catch(e){
-      if (['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','images_unavailable'].includes(e?.code)) S.sample = null;
-      setStatus(e?.code === 'rate_limited' ? '⚠️ Claude 사용량이 많습니다. 잠시 후 다시 올려 주세요.' : '기본 인식기로 다시 시도합니다…');
-      if (e?.code === 'rate_limited'){ busy = false; return; }
-      thumbs.innerHTML = '';
-    }
-  }
   try{
     const worker = await getWorker();
     for (let n=0;n<files.length;n++){
@@ -649,35 +750,6 @@ async function handleFiles(files){
   }finally{
     busy = false; document.getElementById('prog').hidden = true;
   }
-}
-// claude.ai 게시 페이지: Claude가 캡쳐 이미지를 직접 읽어 JSON으로 반환
-async function readWithClaude(files){
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  const prompt = `첨부 이미지는 한국 신용카드사 앱의 "승인 알림" 목록 캡쳐입니다. 보이는 모든 승인 건을 추출하세요.
-각 건은 보통 [가맹점명 / 금액·승인구분 / "사용자 님, 카드명 승인 일시불, M/D HH:MM" / 누적금액] 순서입니다.
-규칙:
-- amount는 그 건의 결제금액(원, 숫자). "누적" 금액은 절대 쓰지 마세요.
-- date는 YYYY-MM-DD. 화면의 날짜 헤더나 M/D에서 가져오고, 연도가 없으면 오늘(${todayStr}) 기준으로 미래가 되지 않게 정하세요.
-- time은 24시간제 HH:MM.
-- user는 "님" 앞의 이름, card는 "님," 뒤 "승인" 앞의 카드명, installment는 "일시불" 또는 "N개월".
-- cancel은 승인취소/취소 건이면 true.
-- 잘려서 금액이나 날짜를 알 수 없는 건은 제외.
-JSON 배열만 답하세요. 예: [{"date":"2026-09-28","time":"19:55","merchant":"수한의원","amount":9400,"user":"이근행","card":"현대 모빌리티","installment":"일시불","cancel":false}]`;
-  const out = [];
-  for (let i = 0; i < files.length; i += S.imgMax){
-    const chunk = files.slice(i, i + S.imgMax);
-    setStatus(`Claude가 캡쳐를 읽는 중… (${Math.min(i + chunk.length, files.length)}/${files.length}장, 수십 초 걸릴 수 있어요)`);
-    const arr = await S.sample.json(prompt, { images: chunk });
-    (Array.isArray(arr) ? arr : []).forEach(r => {
-      const amount = toNum(r?.amount);
-      if (!amount || !/^\d{4}-\d{2}-\d{2}$/.test(r?.date || '')) return;
-      out.push({ date: r.date, time: /^\d{1,2}:\d{2}$/.test(r.time || '') ? r.time.padStart(5,'0') : '',
-        amount, merchant: String(r.merchant || '(가맹점 미상)').trim(), user: String(r.user || ''),
-        card: String(r.card || ''), installment: String(r.installment || ''), cancel: !!r.cancel });
-    });
-  }
-  return out;
 }
 function setStatus(s){ document.getElementById('ocrStatus').textContent = s; }
 function setProgress(p){
@@ -970,12 +1042,6 @@ async function delCat(i){
 }
 async function delRule(m){ delete DB.rules[m]; await commitSettings(); }
 async function download(name, content, type){
-  const dl = window.claude?.use ? await claude.use('downloads').catch(() => null) : null;
-  if (dl){
-    try { await dl.save({ filename: name, data: content }); }
-    catch(e){ if (e?.code !== 'declined') toast('파일을 저장하지 못했습니다.'); }
-    return;
-  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([content], {type}));
   a.download = name; a.click();
@@ -1017,8 +1083,8 @@ async function resetAll(){
     try{
       await queued(async () => {
         const snap = await S.db.collection('months').get();
-        for (const d of snap.docs) await S.db.doc('months/' + d.id).delete();
-        await S.db.doc('settings/main').delete();
+        for (const d of snap.docs) await d.ref.delete();
+        await S.db.collection('settings').doc('main').delete();
       });
       DB.cats = DEFAULT_CATS.slice(); DB.rules = {}; DB.budgets = {};
     }catch(e){ toast(errMsg(e)); }
