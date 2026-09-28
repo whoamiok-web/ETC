@@ -120,6 +120,10 @@ td.num,th.num{text-align:right;white-space:nowrap;}
 .cal .c.today{border-color:var(--line);}
 .cal .c.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
 .cal .c:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.cal .calsum{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;padding:4px 6px 10px;margin-bottom:6px;border-bottom:1px solid var(--line);}
+.cal .calsum .who{font-size:12.5px;color:var(--sub);font-weight:700;flex-basis:100%;}
+.cal .calsum b{font-size:20px;color:var(--neg);font-variant-numeric:tabular-nums;}
+.cal .calsum .inc{font-size:12.5px;color:var(--pos);font-weight:700;}
 .cal .leg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin:8px 4px 0;}
 .daily{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;}
 .daily div{flex:1;background:var(--bar);border-radius:2px 2px 0 0;min-height:1px;opacity:.85;}
@@ -986,8 +990,14 @@ function renderCalendar(rows){
       <span class="n">${d}</span>${exp[d] ? `<span class="e">${short(exp[d])}</span>` : ''}${inc[d] ? `<span class="i">+${short(inc[d])}</span>` : ''}</button>`;
   }
   const spent = exp.filter(Boolean).length, total = exp.reduce((s,v)=>s+v,0);
+  const incTotal = inc.reduce((s,v)=>s+v,0);
+  // 선택한 사용자·분류·검색어를 합계 제목에 표시
+  const fu = document.getElementById('fUser').value, fc = document.getElementById('fCat').value, q = document.getElementById('q').value.trim();
+  const who = [fu, fc, q && `"${q}"`].filter(Boolean).join(' · ');
   document.getElementById('cal').innerHTML =
-    `<div class="wd">${['일','월','화','수','목','금','토'].map(w => `<span>${w}</span>`).join('')}</div><div class="grid">${cells}</div>
+    `<div class="calsum"><span class="who">${esc(who || '전체')} · ${m}월 지출 합계</span>
+       <b>${won(total)}</b>${incTotal ? `<span class="inc">수입 +${won(incTotal)}</span>` : ''}</div>
+     <div class="wd">${['일','월','화','수','목','금','토'].map(w => `<span>${w}</span>`).join('')}</div><div class="grid">${cells}</div>
      <div class="leg"><span>지출한 날 ${spent}일 · 하루 평균 ${won(spent ? total/spent : 0)}</span><span>날짜를 누르면 그날 내역</span></div>`;
 }
 function pickDay(key){
