@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="가계부">
 <title>우리집 가계부</title>
 <style>
 :root{
@@ -151,6 +154,11 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
 <h1>우리집 가계부</h1>
 <div class="subtitle">카드 승인 알림 캡쳐를 올리면 자동으로 입력됩니다</div>
 <div class="sync" id="sync"><i></i><span>이 기기에만 저장 중</span></div>
+<div class="note" id="homeAppNote" hidden style="margin-bottom:12px">
+  <b>홈 화면 앱은 Safari와 저장공간이 따로입니다.</b><br>
+  Safari에서 입력한 내역은 여기서 보이지 않아요. Safari에서 <b>설정 → 부부 공유</b>로 공유 가계부를 만든 뒤 <b>공유 링크 복사</b> → 이 앱의
+  <a href="#" onclick="showView('set');document.getElementById('joinLink').focus();return false">설정 탭</a>에 붙여넣으면 같은 데이터가 보입니다.
+</div>
 
 <!-- ============ 캡쳐 입력 ============ -->
 <section class="view on" id="v-capture">
@@ -248,7 +256,12 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
     </div>
   </div>
   <div class="card" id="shareOff">
-    <div style="font-size:13.5px;line-height:1.7">
+    <div style="font-size:13.5px;line-height:1.7"><b>이미 만든 공유 가계부가 있나요?</b> 복사한 공유 링크를 붙여넣으세요. (홈 화면 앱, 배우자 폰)</div>
+    <div class="row" style="margin:8px 0 14px">
+      <input id="joinLink" placeholder="https://…/household_ledger.html#join=…" style="flex:1" autocomplete="off">
+      <button class="primary" onclick="joinPasted()">연결</button>
+    </div>
+    <div style="font-size:13.5px;line-height:1.7;border-top:1px solid var(--line);padding-top:12px">
       지금은 <b>이 기기에만</b> 저장됩니다. Google <b>Firebase 무료 요금제</b>를 연결하면 부부가 같은 가계부를 실시간으로 봅니다. (한 번만 설정, 약 5분)
     </div>
     <details open>
@@ -423,15 +436,29 @@ function loadScript(src){
   });
 }
 // 공유 링크(#join=...)로 들어오면 설정을 저장하고 주소창에서 지움
-function takeJoinLink(){
-  const m = location.hash.match(/^#join=([A-Za-z0-9_-]+)$/);
-  if (!m) return;
+// 공유 링크 문자열에서 연결 정보를 꺼내 저장. 성공하면 true
+function joinFromText(text){
+  const m = String(text).match(/#join=([A-Za-z0-9_-]+)/);
+  if (!m) return false;
   try {
     const j = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
-    if (j?.c?.apiKey && j?.c?.projectId && j?.h) localStorage.setItem(SHARE_KEY, JSON.stringify({ config: j.c, hid: j.h }));
-  } catch(e){ toast('공유 링크가 올바르지 않습니다. 링크 전체를 다시 복사해 주세요.'); }
+    if (!(j?.c?.apiKey && j?.c?.projectId && j?.h)) return false;
+    localStorage.setItem(SHARE_KEY, JSON.stringify({ config: j.c, hid: j.h }));
+    return true;
+  } catch(e){ return false; }
+}
+function takeJoinLink(){
+  if (!/^#join=/.test(location.hash)) return;
+  if (!joinFromText(location.hash)) toast('공유 링크가 올바르지 않습니다. 링크 전체를 다시 복사해 주세요.');
   history.replaceState(null, '', location.pathname + location.search);
 }
+// 홈 화면 앱처럼 주소창이 없는 곳에서: 복사한 공유 링크를 붙여넣어 연결
+function joinPasted(){
+  const v = document.getElementById('joinLink').value.trim();
+  if (!joinFromText(v)){ toast('공유 링크를 찾지 못했습니다. "공유 링크 복사"로 복사한 주소 전체를 붙여넣어 주세요.'); return; }
+  location.reload();
+}
+const isHomeApp = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 function shareLink(){
   const sh = getShare(); if (!sh) return '';
   const b = btoa(unescape(encodeURIComponent(JSON.stringify({ c: sh.config, h: sh.hid })))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -500,6 +527,7 @@ function randomCode(){
 }
 function renderShareBox(){
   const sh = getShare();
+  document.getElementById('homeAppNote').hidden = !!sh || !isHomeApp();
   document.getElementById('shareOff').hidden = !!sh;
   document.getElementById('shareOn').hidden = !sh;
   if (sh){
