@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>우리집 가계부</title>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 :root{
   --bg:#eef2f7; --card:#ffffff; --ink:#1a2940; --sub:#6b7a8d; --line:#dde3ea;
@@ -117,6 +116,13 @@ td.num,th.num{text-align:right;white-space:nowrap;}
 .note{background:var(--warnbg);border-left:4px solid var(--warnbd);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.6;}
 details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px;}
 .empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:13px;}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:3px 10px;margin-bottom:12px;}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--sub);}
+.sync.on i{background:#2e9d5b;} .sync.err i{background:var(--neg);}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);
+  padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:40;max-width:calc(100% - 32px);box-shadow:0 6px 20px #0004;}
+.dlg{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:30;padding:16px;}
+.dlg .box{background:var(--card);border-radius:14px;padding:18px 16px 14px;max-width:360px;width:100%;font-size:14px;line-height:1.6;white-space:pre-line;}
 @media (max-width:520px){
   .kpi .v{font-size:14px;}
   .bars .b{grid-template-columns:74px 1fr 84px;font-size:12px;}
@@ -126,7 +132,8 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
 <body>
 
 <h1>우리집 가계부</h1>
-<div class="subtitle">카드 승인 알림 캡쳐를 올리면 자동으로 입력됩니다 · 데이터는 이 기기 브라우저에만 저장</div>
+<div class="subtitle">카드 승인 알림 캡쳐를 올리면 자동으로 입력됩니다</div>
+<div class="sync" id="sync"><i></i><span>이 기기에만 저장 중</span></div>
 
 <!-- ============ 캡쳐 입력 ============ -->
 <section class="view on" id="v-capture">
@@ -170,7 +177,7 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
   <div class="note" style="margin-top:18px">
     <b>인식 팁</b><br>
     · 카드사 앱의 <b>알림 목록</b> 화면(가맹점 · 금액 · 날짜가 보이는 화면)을 캡쳐해 주세요.<br>
-    · 첫 인식 때 한글 인식 데이터(약 10MB)를 내려받아 조금 걸립니다. 이후엔 빨라요.<br>
+    · <span id="ocrTip">첫 인식 때 한글 인식 데이터(약 10MB)를 내려받아 조금 걸립니다. 이후엔 빨라요.</span><br>
     · 캡쳐를 겹치게 여러 장 올려도 같은 날짜·시간·금액·가맹점은 중복 저장되지 않습니다.<br>
     · 분류를 한 번 고치면, 같은 가맹점은 다음부터 그 분류로 자동 지정됩니다.
   </div>
@@ -227,8 +234,9 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
       <button onclick="exportCsv()">엑셀용 CSV 저장</button>
       <label class="btn">백업 불러오기<input type="file" accept=".json,application/json" hidden onchange="importJson(this)"></label>
     </div>
-    <div class="muted" style="margin-top:8px">브라우저 데이터를 지우면 가계부도 지워집니다. 가끔 백업 파일을 저장해 두세요.</div>
+    <div class="muted" style="margin-top:8px" id="backupNote">브라우저 데이터를 지우면 가계부도 지워집니다. 가끔 백업 파일을 저장해 두세요.</div>
   </div>
+  <div class="card note" id="migrate" hidden><span></span> <button onclick="migrateLocal()">공유 가계부로 옮기기</button></div>
   <h2>초기화</h2>
   <div class="card"><button class="danger" onclick="resetAll()">모든 내역 삭제</button></div>
 </section>
@@ -297,8 +305,127 @@ function load(){
   };
 }
 function persist(){
+  if (S.db) return;   // 공유 모드에서는 서버가 원본
   try{ localStorage.setItem(KEY, JSON.stringify(DB)); }
-  catch(e){ alert('저장 실패: 브라우저 저장공간을 사용할 수 없습니다. 백업 파일로 저장해 두세요.'); }
+  catch(e){ toast('저장 실패: 브라우저 저장공간을 사용할 수 없습니다. 백업 파일로 저장해 두세요.'); }
+}
+
+/* ===================== 알림 / 확인창 (페이지 내장) ===================== */
+let toastTimer;
+function toast(msg){
+  let t = document.getElementById('toast');
+  if (!t){ t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 3200);
+}
+function ask(msg, okLabel = '확인', danger = false){
+  return new Promise(res => {
+    const d = document.createElement('div'); d.className = 'dlg';
+    d.innerHTML = `<div class="box"><div></div><div class="row" style="margin-top:14px"><span class="sp"></span><button>취소</button><button class="${danger?'primary danger':'primary'}"></button></div></div>`;
+    d.querySelector('.box > div').textContent = msg;
+    const [no, yes] = d.querySelectorAll('button');
+    yes.textContent = okLabel;
+    if (danger) yes.style.cssText = 'background:var(--neg);border-color:var(--neg);color:#fff';
+    const done = v => { d.remove(); res(v); };
+    no.onclick = () => done(false); yes.onclick = () => done(true);
+    d.onclick = e => { if (e.target === d) done(false); };
+    document.body.appendChild(d); yes.focus();
+  });
+}
+
+/* ===================== 공유 저장소 (부부 실시간 공유) =====================
+ * claude.ai 에 게시된 페이지에서는 db 기능으로 모든 사람이 같은 데이터를 실시간으로 봅니다.
+ * 파일로 직접 열면 이 기기 브라우저(localStorage)에만 저장됩니다.
+ * 구조: months/<YYYY-MM> = { tx: { <id>: 거래 | null(삭제) } },  settings/main = { cats, rules, budgets } */
+const S = { db: null, sample: null, loaded: false };
+let writeChain = Promise.resolve();
+const queued = fn => (writeChain = writeChain.then(fn, fn));
+
+function setSync(state, text){
+  const el = document.getElementById('sync');
+  el.className = 'sync ' + state; el.lastElementChild.textContent = text;
+}
+async function initShared(){
+  if (!window.claude?.use) return;
+  claude.use('sample').then(async s => {
+    if (!s) return;
+    const lim = await s.limits().catch(() => null);
+    if (lim?.images){ S.sample = s; S.imgMax = lim.images.maxCount || 1;
+      document.getElementById('ocrTip').textContent = 'Claude가 캡쳐를 읽어 입력합니다. 처음 한 번 사용 허락을 묻고, 한 번에 수십 초 걸릴 수 있어요.'; }
+  });
+  const db = await claude.use('db').catch(() => null);
+  if (!db) return;
+  S.db = db;
+  DB.tx = []; renderList(); renderStats();
+  setSync('', '공유 데이터 불러오는 중…');
+  document.getElementById('backupNote').textContent = '이 가계부를 함께 보는 모든 사람에게 실시간으로 공유됩니다. 백업 파일은 만일을 위한 사본입니다.';
+  db.collection('months').onSnapshot(snap => {
+    const tx = [];
+    snap.docs.forEach(d => { for (const [id, r] of Object.entries(d.data()?.tx || {})) if (r) tx.push({ ...r, id }); });
+    DB.tx = tx; S.loaded = true;
+    setSync('on', '실시간 공유 중');
+    renderList(); renderStats(); renderSettingsLocalHint();
+  }, () => setSync('err', '공유 연결이 끊겼습니다. 새로고침해 주세요.'));
+  db.doc('settings/main').onSnapshot(s => {
+    if (!s.exists) return;
+    const d = s.data();
+    if (Array.isArray(d.cats) && d.cats.length) DB.cats = [...d.cats];
+    DB.rules = Object.fromEntries(Object.entries(d.rules || {}).filter(([, v]) => v));
+    DB.budgets = { ...(d.budgets || {}) };
+    renderAll();
+  }, () => {});
+}
+const errMsg = e => e?.code === 'invalid_argument' ? '저장 권한이 없습니다. 공유 설정에서 편집 권한을 받아 주세요.'
+  : e?.code === 'quota_exceeded' ? '저장 공간이 가득 찼습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+
+// 한 달 문서에 거래 추가/수정(rec) 또는 삭제(null)를 병합 기록
+async function writeMonth(ym, patch){
+  const ref = S.db.doc('months/' + ym);
+  try { await ref.update({ tx: patch }); }
+  catch(e){
+    if (e?.code !== 'invalid_argument') throw e;
+    const cur = await ref.get();
+    if (cur.exists) throw e;
+    await ref.set({ tx: patch });
+  }
+}
+const stripId = ({ id, ...r }) => JSON.parse(JSON.stringify(r));
+// 거래 저장/삭제의 단일 진입점
+async function commitTx(adds = [], removes = []){
+  if (!S.db){
+    const rm = new Set([...removes, ...adds].map(t => t.id));
+    DB.tx = DB.tx.filter(t => !rm.has(t.id)).concat(adds);
+    persist(); renderAll(); return true;
+  }
+  const byMonth = {};
+  removes.forEach(t => (byMonth[t.date.slice(0,7)] ||= {})[t.id] = null);
+  adds.forEach(t => (byMonth[t.date.slice(0,7)] ||= {})[t.id] = stripId(t));
+  try {
+    await queued(async () => { for (const [ym, p] of Object.entries(byMonth)) await writeMonth(ym, p); });
+    return true;
+  } catch(e){ toast(errMsg(e)); return false; }
+}
+async function commitSettings(){
+  if (!S.db){ persist(); renderAll(); return true; }
+  try {
+    await queued(() => S.db.doc('settings/main').set(JSON.parse(JSON.stringify({ cats: DB.cats, rules: DB.rules, budgets: DB.budgets }))));
+    renderAll(); return true;
+  } catch(e){ toast(errMsg(e)); return false; }
+}
+// 이 기기에 예전 데이터가 있으면 공유 가계부로 옮기기
+function localOnly(){ try { return JSON.parse(localStorage.getItem(KEY))?.tx || []; } catch(e){ return []; } }
+function renderSettingsLocalHint(){
+  const box = document.getElementById('migrate');
+  if (!box) return;
+  const keys = new Set(DB.tx.map(txKey));
+  const n = S.db ? localOnly().filter(t => !keys.has(txKey(t))).length : 0;
+  box.hidden = !n;
+  box.querySelector('span').textContent = `이 기기에만 저장된 내역 ${n}건이 있습니다.`;
+}
+async function migrateLocal(){
+  const keys = new Set(DB.tx.map(txKey));
+  const adds = localOnly().filter(t => !keys.has(txKey(t)));
+  if (adds.length && await commitTx(adds)) toast(`${adds.length}건을 공유 가계부로 옮겼습니다.`);
 }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const won = n => (n<0?'-':'') + Math.abs(Math.round(n)).toLocaleString('ko-KR') + '원';
@@ -430,6 +557,14 @@ function parseCardText(text){
 let ocrWorker = null;
 async function getWorker(){
   if (ocrWorker) return ocrWorker;
+  if (!window.Tesseract){
+    setStatus('인식 엔진 불러오는 중…');
+    await new Promise(res => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+      s.onload = s.onerror = res; document.head.appendChild(s);
+    });
+  }
   if (!window.Tesseract) throw new Error('인식 엔진을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
   setStatus('한글 인식 엔진 준비 중… (처음 한 번만 오래 걸려요)');
   ocrWorker = await Tesseract.createWorker(['kor','eng'], 1, {
@@ -478,6 +613,20 @@ async function handleFiles(files){
   busy = true;
   const thumbs = document.getElementById('thumbs');
   const texts = [];
+  if (S.sample){
+    files.forEach(f => { const t = document.createElement('img'); t.src = URL.createObjectURL(f); thumbs.appendChild(t); });
+    try{
+      const found = await readWithClaude(files);
+      addPending(found);
+      setStatus(found.length ? `✅ ${found.length}건을 찾았습니다. 아래에서 확인 후 저장하세요.` : '⚠️ 승인 내역을 찾지 못했습니다. 카드 알림 목록 화면인지 확인해 주세요.');
+      busy = false; return;
+    }catch(e){
+      if (['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed','images_unavailable'].includes(e?.code)) S.sample = null;
+      setStatus(e?.code === 'rate_limited' ? '⚠️ Claude 사용량이 많습니다. 잠시 후 다시 올려 주세요.' : '기본 인식기로 다시 시도합니다…');
+      if (e?.code === 'rate_limited'){ busy = false; return; }
+      thumbs.innerHTML = '';
+    }
+  }
   try{
     const worker = await getWorker();
     for (let n=0;n<files.length;n++){
@@ -500,6 +649,35 @@ async function handleFiles(files){
   }finally{
     busy = false; document.getElementById('prog').hidden = true;
   }
+}
+// claude.ai 게시 페이지: Claude가 캡쳐 이미지를 직접 읽어 JSON으로 반환
+async function readWithClaude(files){
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const prompt = `첨부 이미지는 한국 신용카드사 앱의 "승인 알림" 목록 캡쳐입니다. 보이는 모든 승인 건을 추출하세요.
+각 건은 보통 [가맹점명 / 금액·승인구분 / "사용자 님, 카드명 승인 일시불, M/D HH:MM" / 누적금액] 순서입니다.
+규칙:
+- amount는 그 건의 결제금액(원, 숫자). "누적" 금액은 절대 쓰지 마세요.
+- date는 YYYY-MM-DD. 화면의 날짜 헤더나 M/D에서 가져오고, 연도가 없으면 오늘(${todayStr}) 기준으로 미래가 되지 않게 정하세요.
+- time은 24시간제 HH:MM.
+- user는 "님" 앞의 이름, card는 "님," 뒤 "승인" 앞의 카드명, installment는 "일시불" 또는 "N개월".
+- cancel은 승인취소/취소 건이면 true.
+- 잘려서 금액이나 날짜를 알 수 없는 건은 제외.
+JSON 배열만 답하세요. 예: [{"date":"2026-09-28","time":"19:55","merchant":"수한의원","amount":9400,"user":"이근행","card":"현대 모빌리티","installment":"일시불","cancel":false}]`;
+  const out = [];
+  for (let i = 0; i < files.length; i += S.imgMax){
+    const chunk = files.slice(i, i + S.imgMax);
+    setStatus(`Claude가 캡쳐를 읽는 중… (${Math.min(i + chunk.length, files.length)}/${files.length}장, 수십 초 걸릴 수 있어요)`);
+    const arr = await S.sample.json(prompt, { images: chunk });
+    (Array.isArray(arr) ? arr : []).forEach(r => {
+      const amount = toNum(r?.amount);
+      if (!amount || !/^\d{4}-\d{2}-\d{2}$/.test(r?.date || '')) return;
+      out.push({ date: r.date, time: /^\d{1,2}:\d{2}$/.test(r.time || '') ? r.time.padStart(5,'0') : '',
+        amount, merchant: String(r.merchant || '(가맹점 미상)').trim(), user: String(r.user || ''),
+        card: String(r.card || ''), installment: String(r.installment || ''), cancel: !!r.cancel });
+    });
+  }
+  return out;
 }
 function setStatus(s){ document.getElementById('ocrStatus').textContent = s; }
 function setProgress(p){
@@ -545,22 +723,26 @@ function clearReview(){
   document.getElementById('rawText').value = ''; document.getElementById('rawBox').hidden = true;
   setStatus('');
 }
-function saveReview(){
+async function saveReview(){
   const existing = new Set(DB.tx.map(txKey));
-  let n = 0;
-  for (const p of pending.filter(p => p.checked && p.amount > 0)){
+  const adds = [];
+  let learned = false;
+  for (const p of pending.filter(p => p.checked && p.amount > 0 && p.date)){
     const k = txKey(p);
     if (existing.has(k)) continue;
     existing.add(k);
-    DB.tx.push({ id: uid(), type:'expense', date:p.date, time:p.time, amount:p.amount, merchant:p.merchant,
+    adds.push({ id: uid(), type:'expense', date:p.date, time:p.time, amount:p.amount, merchant:p.merchant,
       category:p.category, user:p.user, card:p.card, installment:p.installment, cancel:!!p.cancel, memo:'', source:'ocr' });
-    if (p.category !== guessCategoryDefault(p.merchant)) learnCategory(p.merchant, p.category);
-    n++;
+    if (p.category !== guessCategoryDefault(p.merchant)){ learnCategory(p.merchant, p.category); learned = true; }
   }
-  persist();
-  const last = pending.find(p => p.checked);
+  const btn = document.getElementById('saveReview'); btn.disabled = true;
+  const ok = await commitTx(adds);
+  if (ok && learned) await commitSettings();
+  btn.disabled = false;
+  if (!ok) return;
+  const last = adds[0];
   clearReview();
-  setStatus(`💾 ${n}건 저장했습니다.`);
+  setStatus(`💾 ${adds.length}건 저장했습니다.`);
   if (last) cur = last.date.slice(0,7);
   renderAll();
 }
@@ -729,27 +911,28 @@ function openEdit(id){
 document.getElementById('mAmt').oninput = e => { const n = toNum(e.target.value); e.target.value = n ? n.toLocaleString('ko-KR') : ''; };
 document.getElementById('mMerchant').onchange = e => { if (!editId) document.getElementById('mCat').value = guessCategory(e.target.value); };
 function closeEdit(){ document.getElementById('modal').classList.remove('on'); }
-function saveEdit(){
+async function saveEdit(){
   const g = id => document.getElementById(id).value.trim();
   const amount = toNum(g('mAmt'));
-  if (!amount){ alert('금액을 입력하세요.'); return; }
-  if (!g('mDate')){ alert('날짜를 입력하세요.'); return; }
+  if (!amount){ toast('금액을 입력하세요.'); return; }
+  if (!g('mDate')){ toast('날짜를 입력하세요.'); return; }
   const rec = { type: editType, date: g('mDate'), time: g('mTime'), amount, merchant: g('mMerchant') || (editType==='income'?'수입':'지출'),
     category: editType==='income' ? '수입' : g('mCat'), user: g('mUser'), card: g('mCard'), installment: g('mInst'),
     cancel: document.getElementById('mCancel').checked, memo: g('mMemo') };
-  if (editId){
-    const t = DB.tx.find(x => x.id===editId);
-    if (editType==='expense' && t.category !== rec.category) learnCategory(rec.merchant, rec.category);
-    Object.assign(t, rec);
-  } else {
-    DB.tx.push({ id: uid(), source:'manual', ...rec });
-  }
-  persist(); closeEdit(); cur = rec.date.slice(0,7); renderAll();
+  const old = editId ? DB.tx.find(x => x.id===editId) : null;
+  const next = old ? { ...old, ...rec } : { id: uid(), source:'manual', ...rec };
+  const learned = old && editType==='expense' && old.category !== rec.category;
+  if (learned) learnCategory(rec.merchant, rec.category);
+  // 월이 바뀌면 이전 달 문서에서 지움
+  const removes = old && old.date.slice(0,7) !== next.date.slice(0,7) ? [old] : [];
+  if (!await commitTx([next], removes)) return;
+  if (learned) await commitSettings();
+  closeEdit(); cur = rec.date.slice(0,7); renderAll();
 }
-function delEdit(){
-  if (!confirm('이 내역을 삭제할까요?')) return;
-  DB.tx = DB.tx.filter(x => x.id !== editId);
-  persist(); closeEdit(); renderAll();
+async function delEdit(){
+  const t = DB.tx.find(x => x.id === editId);
+  if (!t || !await ask(`'${t.merchant}' ${won(t.amount)} 내역을 삭제할까요?`, '삭제', true)) return;
+  if (await commitTx([], [t])){ closeEdit(); renderAll(); }
 }
 
 /* ===================== 설정 ===================== */
@@ -764,27 +947,35 @@ function renderSettings(){
     `<div class="row" style="padding:4px 0;border-bottom:1px solid var(--line)"><span>${esc(m)} → <b style="color:var(--ink)">${esc(c)}</b></span><span class="sp"></span><a href="#" onclick="delRule('${esc(m).replace(/'/g,"\\'")}');return false" style="color:var(--neg)">삭제</a></div>`).join('')
     : '내역의 분류를 수정하면 여기에 자동으로 규칙이 쌓입니다.';
 }
-function saveBudgets(){
+async function saveBudgets(){
   DB.budgets = {};
   document.querySelectorAll('[data-b]').forEach(i => { const n = toNum(i.value); if (n) DB.budgets[i.dataset.b] = n; });
-  persist(); alert('예산을 저장했습니다.'); renderAll();
+  if (await commitSettings()) toast('예산을 저장했습니다.');
 }
-function addCat(){
+async function addCat(){
   const v = document.getElementById('newCat').value.trim();
   if (!v || DB.cats.includes(v) || v==='수입') return;
   DB.cats.splice(DB.cats.length - (DB.cats.includes('기타')?1:0), 0, v);
-  document.getElementById('newCat').value = ''; persist(); renderAll();
+  document.getElementById('newCat').value = '';
+  await commitSettings();
 }
-function delCat(i){
+async function delCat(i){
   const c = DB.cats[i];
-  if (!confirm(`'${c}' 분류를 삭제할까요? 해당 내역은 '기타'로 옮겨집니다.`)) return;
+  if (!await ask(`'${c}' 분류를 삭제할까요?\n해당 내역은 '기타'로 옮겨집니다.`, '삭제', true)) return;
   DB.cats.splice(i,1);
-  DB.tx.forEach(t => { if (t.category===c) t.category='기타'; });
   Object.keys(DB.rules).forEach(k => { if (DB.rules[k]===c) delete DB.rules[k]; });
-  persist(); renderAll();
+  const moved = DB.tx.filter(t => t.category===c).map(t => ({ ...t, category:'기타' }));
+  if (moved.length) await commitTx(moved);
+  await commitSettings();
 }
-function delRule(m){ delete DB.rules[m]; persist(); renderSettings(); }
-function download(name, content, type){
+async function delRule(m){ delete DB.rules[m]; await commitSettings(); }
+async function download(name, content, type){
+  const dl = window.claude?.use ? await claude.use('downloads').catch(() => null) : null;
+  if (dl){
+    try { await dl.save({ filename: name, data: content }); }
+    catch(e){ if (e?.code !== 'declined') toast('파일을 저장하지 못했습니다.'); }
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([content], {type}));
   a.download = name; a.click();
@@ -802,27 +993,40 @@ function exportCsv(){
 function importJson(input){
   const f = input.files[0]; if (!f) return;
   const r = new FileReader();
-  r.onload = () => {
-    try{
-      const d = JSON.parse(r.result);
-      if (!Array.isArray(d.tx)) throw new Error('형식 오류');
-      const mode = confirm(`백업에 ${d.tx.length}건이 있습니다.\n\n[확인] 현재 내역에 합치기 (중복 제외)\n[취소] 불러오기 취소`);
-      if (!mode) return;
-      const keys = new Set(DB.tx.map(txKey)); let n=0;
-      d.tx.forEach(t => { if (!keys.has(txKey(t))){ DB.tx.push({...t, id: t.id || uid()}); keys.add(txKey(t)); n++; } });
-      (d.cats||[]).forEach(c => { if (!DB.cats.includes(c)) DB.cats.push(c); });
-      Object.assign(DB.rules, d.rules||{});
-      if (d.budgets) Object.assign(DB.budgets, d.budgets);
-      persist(); renderAll(); alert(`${n}건을 불러왔습니다.`);
-    }catch(e){ alert('백업 파일을 읽을 수 없습니다: ' + e.message); }
+  r.onload = async () => {
     input.value = '';
+    let d;
+    try{ d = JSON.parse(r.result); if (!Array.isArray(d.tx)) throw 0; }
+    catch(e){ toast('백업 파일 형식이 아닙니다. 이 가계부에서 저장한 .json 파일을 골라 주세요.'); return; }
+    const keys = new Set(DB.tx.map(txKey));
+    const adds = [];
+    d.tx.forEach(t => { if (t?.date && !keys.has(txKey(t))){ adds.push({ ...t, id: t.id || uid() }); keys.add(txKey(t)); } });
+    if (!await ask(`백업에 ${d.tx.length}건이 있습니다.\n그중 새 내역 ${adds.length}건을 현재 가계부에 합칠까요?`, '합치기')) return;
+    (d.cats||[]).forEach(c => { if (!DB.cats.includes(c)) DB.cats.push(c); });
+    Object.assign(DB.rules, d.rules||{});
+    if (d.budgets) Object.assign(DB.budgets, d.budgets);
+    if (await commitTx(adds) && await commitSettings()) toast(`${adds.length}건을 불러왔습니다.`);
   };
   r.readAsText(f);
 }
-function resetAll(){
-  if (!confirm('모든 내역·예산·규칙을 삭제합니다. 되돌릴 수 없습니다. 계속할까요?')) return;
-  try{ localStorage.removeItem(KEY); }catch(e){}
-  DB = load(); renderAll();
+async function resetAll(){
+  const msg = S.db ? '공유 가계부의 모든 내역·예산·규칙을 삭제합니다.\n함께 보는 사람 화면에서도 모두 사라지고, 되돌릴 수 없습니다.'
+                   : '모든 내역·예산·규칙을 삭제합니다. 되돌릴 수 없습니다.';
+  if (!await ask(msg, '모두 삭제', true)) return;
+  if (S.db){
+    try{
+      await queued(async () => {
+        const snap = await S.db.collection('months').get();
+        for (const d of snap.docs) await S.db.doc('months/' + d.id).delete();
+        await S.db.doc('settings/main').delete();
+      });
+      DB.cats = DEFAULT_CATS.slice(); DB.rules = {}; DB.budgets = {};
+    }catch(e){ toast(errMsg(e)); }
+  } else {
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    DB = load();
+  }
+  renderAll();
 }
 
 /* ===================== 화면 ===================== */
@@ -832,8 +1036,9 @@ function showView(v){
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showView(b.dataset.v));
-function renderAll(){ renderList(); renderStats(); renderSettings(); renderReview(); }
+function renderAll(){ renderList(); renderStats(); renderSettings(); renderReview(); renderSettingsLocalHint(); }
 renderAll();
+initShared();
 </script>
 </body>
 </html>
