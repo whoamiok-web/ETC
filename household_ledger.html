@@ -24,6 +24,7 @@
   --warnbg:#2e2a1a; --warnbd:#c79a1e; --bar:#64a4ec;
 }
 *{box-sizing:border-box;}
+[hidden]{display:none!important;}
 body{margin:0 auto;background:var(--bg);color:var(--ink);
   font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(90px + env(safe-area-inset-bottom,0px));max-width:860px;}
@@ -101,6 +102,22 @@ td.num,th.num{text-align:right;white-space:nowrap;}
 .bars .tr i{display:block;height:100%;background:var(--bar);border-radius:6px;}
 .bars .n{text-align:right;font-weight:700;white-space:nowrap;}
 .budget .tr i.over{background:var(--neg);}
+/* 달력 */
+.cal{padding:10px 8px;margin-top:12px;}
+.cal .wd,.cal .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;}
+.cal .wd span{text-align:center;font-size:11px;color:var(--sub);padding:2px 0 6px;font-weight:700;}
+.cal .wd span:first-child,.cal .c.sun .n{color:var(--neg);}
+.cal .wd span:last-child,.cal .c.sat .n{color:var(--accent);}
+.cal .c{min-height:54px;border-radius:8px;padding:4px 3px;display:flex;flex-direction:column;align-items:center;gap:1px;
+  cursor:pointer;border:1.5px solid transparent;font-variant-numeric:tabular-nums;background:transparent;color:var(--ink);font:inherit;}
+.cal .c.blank{cursor:default;}
+.cal .c .n{font-size:12px;font-weight:700;line-height:1.3;}
+.cal .c .e{font-size:10.5px;font-weight:800;color:var(--neg);letter-spacing:-.3px;white-space:nowrap;}
+.cal .c .i{font-size:10px;font-weight:700;color:var(--pos);white-space:nowrap;}
+.cal .c.today{border-color:var(--line);}
+.cal .c.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+.cal .c:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.cal .leg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin:8px 4px 0;}
 .daily{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;}
 .daily div{flex:1;background:var(--bar);border-radius:2px 2px 0 0;min-height:1px;opacity:.85;}
 .daily div.z{background:var(--line);}
@@ -192,6 +209,8 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
     <select id="fCat" onchange="renderList()"></select>
     <select id="fUser" onchange="renderList()"></select>
   </div>
+  <div class="card cal" id="cal"></div>
+  <div class="row" id="daySel" hidden style="margin:4px 4px 0"><b id="daySelLabel" style="font-size:13.5px"></b><span class="sp"></span><button onclick="pickDay(null)">전체 내역 보기</button></div>
   <div id="list"></div>
 </section>
 
@@ -887,10 +906,21 @@ function renderList(){
       (!q || (t.merchant+' '+(t.memo||'')).toLowerCase().includes(q)))
     .sort((a,b) => (b.date+(b.time||'')).localeCompare(a.date+(a.time||'')));
 
-  if (!rows.length){ document.getElementById('list').innerHTML = '<div class="empty">이 달의 내역이 없습니다.<br>캡쳐 입력 탭에서 카드 알림 캡쳐를 올려보세요.</div>'; return; }
-  const byDay = {};
-  rows.forEach(t => (byDay[t.date] = byDay[t.date] || []).push(t));
+  renderCalendar(rows);
   const WD = ['일','월','화','수','목','금','토'];
+  if (selDay && !selDay.startsWith(cur)) selDay = null;
+  document.getElementById('daySel').hidden = !selDay;
+  const shown = selDay ? rows.filter(t => t.date === selDay) : rows;
+  if (selDay){
+    const d = new Date(selDay+'T00:00');
+    const e = sums(shown).exp;
+    document.getElementById('daySelLabel').textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]}) · 지출 ${won(e)}`;
+  }
+
+  if (!shown.length){ document.getElementById('list').innerHTML = selDay ? '<div class="empty">이 날은 내역이 없습니다.</div>'
+    : '<div class="empty">이 달의 내역이 없습니다.<br>캡쳐 입력 탭에서 카드 알림 캡쳐를 올려보세요.</div>'; return; }
+  const byDay = {};
+  shown.forEach(t => (byDay[t.date] = byDay[t.date] || []).push(t));
   document.getElementById('list').innerHTML = Object.entries(byDay).map(([d, ts]) => {
     const dt = new Date(d+'T00:00');
     const dayExp = ts.filter(t=>t.type==='expense'&&counted(t)).reduce((s,t)=>s+t.amount,0);
@@ -903,6 +933,39 @@ function renderList(){
           <div class="a ${t.cancel?'cxl':t.type==='income'?'inc':''}">${t.type==='income'?'+':'-'}${won(t.amount)}</div>
         </div>`).join('')}</div>`;
   }).join('');
+}
+
+/* ===================== 달력 ===================== */
+let selDay = null;   // 달력에서 고른 날짜 (YYYY-MM-DD)
+// 칸이 좁으니 10만원 이상은 '12.3만' 형태로 줄여 표시
+const short = n => n >= 100000 ? (Math.round(n/1000)/10).toLocaleString('ko-KR') + '만' : n.toLocaleString('ko-KR');
+function renderCalendar(rows){
+  const [y, m] = cur.split('-').map(Number);
+  const first = new Date(y, m-1, 1).getDay();
+  const days = new Date(y, m, 0).getDate();
+  const exp = Array(days+1).fill(0), inc = Array(days+1).fill(0);
+  rows.forEach(t => { if (!counted(t)) return; const d = +t.date.slice(8,10); (t.type==='income' ? inc : exp)[d] += t.amount; });
+  const max = Math.max(...exp, 1);
+  const now = new Date(), todayKey = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  let cells = '';
+  for (let i=0;i<first;i++) cells += '<div class="c blank"></div>';
+  for (let d=1; d<=days; d++){
+    const key = `${cur}-${pad(d)}`, wd = (first + d - 1) % 7;
+    // 지출이 클수록 진하게 (최대 지출일 기준 8~40%)
+    const bg = exp[d] ? `background:color-mix(in srgb, var(--neg) ${Math.round(8 + exp[d]/max*32)}%, transparent)` : '';
+    cells += `<button class="c ${wd===0?'sun':wd===6?'sat':''} ${key===todayKey?'today':''} ${key===selDay?'sel':''}" style="${bg}"
+      onclick="pickDay('${key}')" aria-label="${m}월 ${d}일 지출 ${won(exp[d])}${inc[d]?', 수입 '+won(inc[d]):''}">
+      <span class="n">${d}</span>${exp[d] ? `<span class="e">${short(exp[d])}</span>` : ''}${inc[d] ? `<span class="i">+${short(inc[d])}</span>` : ''}</button>`;
+  }
+  const spent = exp.filter(Boolean).length, total = exp.reduce((s,v)=>s+v,0);
+  document.getElementById('cal').innerHTML =
+    `<div class="wd">${['일','월','화','수','목','금','토'].map(w => `<span>${w}</span>`).join('')}</div><div class="grid">${cells}</div>
+     <div class="leg"><span>지출한 날 ${spent}일 · 하루 평균 ${won(spent ? total/spent : 0)}</span><span>날짜를 누르면 그날 내역</span></div>`;
+}
+function pickDay(key){
+  selDay = key && key !== selDay ? key : null;
+  renderList();
+  if (selDay) document.getElementById('daySel').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 /* ===================== 통계 ===================== */
