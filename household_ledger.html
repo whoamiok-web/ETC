@@ -154,6 +154,8 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
 .sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:3px 10px;margin-bottom:12px;}
 .sync i{width:8px;height:8px;border-radius:50%;background:var(--sub);}
 .sync.on i{background:#2e9d5b;} .sync.err i{background:var(--neg);}
+.pr{font-size:13px;padding:7px 10px;border-radius:8px;margin-bottom:5px;background:var(--card);border:1px solid var(--line);line-height:1.5;}
+.pr.ok{cursor:pointer;} .pr.dup{opacity:.7;} .pr.warn{background:var(--warnbg);border-color:var(--warnbd);}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);
   padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:40;max-width:calc(100% - 32px);box-shadow:0 6px 20px #0004;}
 .dlg{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:30;padding:16px;}
@@ -210,8 +212,12 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
     <button onclick="toggleText()">알림 문자 붙여넣기</button>
   </div>
   <div id="textBox" hidden style="margin-top:10px">
-    <textarea id="pasteText" placeholder="카드 승인 문자/알림 내용을 붙여넣으세요"></textarea>
-    <div class="row" style="margin-top:6px"><span class="sp"></span><button class="primary" onclick="parsePasted()">분석</button></div>
+    <textarea id="pasteText" placeholder="카드 승인 문자/알림 내용을 붙여넣으세요 (여러 건을 한꺼번에 붙여넣어도 됩니다)"></textarea>
+    <div class="row" style="margin-top:6px">
+      <span class="muted">분석하면 바로 저장되고 칸이 비워집니다</span><span class="sp"></span>
+      <button class="primary" id="pasteBtn" onclick="parsePasted()">분석·저장</button>
+    </div>
+    <div id="pasteResult" style="margin-top:8px"></div>
   </div>
 
   <div class="note" style="margin-top:18px">
@@ -709,26 +715,36 @@ function parseCardText(text){
     }
     if (amt == null || amt <= 0) continue;
 
-    // 2) 가맹점: 금액 줄 바로 위 줄(뒤에 붙은 시각 제거)
-    let merchant = '';
-    for (let k=amtIdx-1;k>lastUsed && k>=amtIdx-2;k--){
-      const c = lines[k];
-      if (RE_HEADER.test(c) || isCumulative(c) || RE_DETAIL.test(c)) continue;
-      const name = c.replace(RE_TIME_TAIL,'').replace(/^[•●·\-*o]+\s*/,'').trim();
-      if (name && !/^\d{1,2}:\d{2}$/.test(name)) { merchant = name; break; }
-    }
-    // SMS형: "…원 일시불 09/28 19:55 가맹점명" → 시각 뒤 텍스트를 가맹점으로
-    if (!merchant){
-      const tail = line.slice(line.search(RE_DETAIL) + dm[0].length).replace(/누적.*$/,'').trim();
-      if (tail) merchant = tail;
+    // 2) 가맹점
+    let merchant = '', usedTo = i;
+    const tail = line.slice(line.search(RE_DETAIL) + dm[0].length).replace(/누적.*$/,'').replace(/^[\s,·]+/,'').trim();
+    const pureDate = !/[가-힣]/.test(line.replace(/누적.*$/,''));   // 문자형 여러 줄: "09/28 19:55" 만 있는 줄
+    const next = lines[i+1] || '';
+    if (tail && !/^(일시불|\d+\s*개월)/.test(tail)){
+      // 문자형: "…09/28 19:55 수한의원" → 시각 뒤가 가맹점
+      merchant = tail;
+    } else if (pureDate && next && !isCumulative(next) && !RE_DETAIL.test(next) && amountOf(next) == null && !RE_HEADER.test(next)){
+      // 문자형: 날짜 줄 다음 줄이 가맹점
+      merchant = next; usedTo = i + 1;
+    } else {
+      // 카드사 앱 알림형: 금액 줄 바로 위 줄(뒤에 붙은 시각 제거)
+      for (let k=amtIdx-1;k>lastUsed && k>=amtIdx-2;k--){
+        const c = lines[k];
+        if (RE_HEADER.test(c) || isCumulative(c) || RE_DETAIL.test(c)) continue;
+        const name = c.replace(RE_TIME_TAIL,'').replace(/^[•●·\-*o]+\s*/,'').trim();
+        if (name && !/^\d{1,2}:\d{2}$/.test(name)) { merchant = name; break; }
+      }
     }
     merchant = fixBrand(merchant);
     if (!merchant) merchant = '(가맹점 미상)';
 
-    const ctx = amtLine + ' ' + line;
-    const user = (line.match(/([가-힣*]{2,4})\s*님/) || [])[1] || '';
+    // 이 건에 해당하는 줄들 (사용자·카드·할부·취소 찾기용)
+    const block = lines.slice(lastUsed + 1, usedTo + 1).join(' ');
+    const ctx = amtLine + ' ' + line + ' ' + block;
+    const user = (line.match(/([가-힣*]{2,4})\s*님/) || block.match(/([가-힣*]{2,4})\s*님/) || block.match(/([가-힣]\*[가-힣]{1,2})/) || [])[1] || '';
     let card = (line.match(/님\s*[,.]?\s*(.+?)\s*승인/) || [])[1] || '';
-    if (!card) card = (ctx.match(/([가-힣A-Za-z]+카드)/) || [])[1] || '';
+    if (!card) card = (block.match(/([가-힣A-Za-z]+카드)/) || [])[1] || '';
+    if (!card){ const c = (block.match(/([가-힣A-Z]{2,6})\s?\(?\d{0,4}\)?\s*승인/) || [])[1]; if (c) card = c + '카드'; }   // "삼성1234승인" → 삼성카드
     const inst = (ctx.match(/일시불|\d{1,2}\s*개월/) || [''])[0].replace(/\s/g,'');
     const cancel = /취소/.test(ctx);
     const year = inferYear(mo, da, hintYear);
@@ -738,7 +754,7 @@ function parseCardText(text){
       time: `${pad(hh)}:${pad(mi)}`,
       amount: amt, merchant, user, card: card.trim(), installment: inst, cancel,
     });
-    lastUsed = i;
+    lastUsed = usedTo;
   }
   return out;
 }
@@ -903,12 +919,42 @@ function reparse(){
   addPending(parseCardText(document.getElementById('rawText').value));
   setStatus(pending.length ? `✅ ${pending.length}건을 찾았습니다.` : '⚠️ 승인 내역을 찾지 못했습니다.');
 }
-function toggleText(){ const b = document.getElementById('textBox'); b.hidden = !b.hidden; }
-function parsePasted(){
-  const found = parseCardText(document.getElementById('pasteText').value);
-  addPending(found);
-  setStatus(found.length ? `✅ ${found.length}건을 찾았습니다. 위에서 확인 후 저장하세요.` : '⚠️ 승인 내역을 찾지 못했습니다.');
-  window.scrollTo({top:0, behavior:'smooth'});
+function toggleText(){ const b = document.getElementById('textBox'); b.hidden = !b.hidden; if (!b.hidden) document.getElementById('pasteText').focus(); }
+// PC: Ctrl+Enter(맥 ⌘+Enter)로 바로 분석·저장
+document.getElementById('pasteText').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); parsePasted(); } });
+// 문자 붙여넣기: 분석하면 바로 저장하고 입력칸을 비워 다음 문자를 이어서 입력
+async function parsePasted(){
+  const box = document.getElementById('pasteText'), btn = document.getElementById('pasteBtn');
+  const res = document.getElementById('pasteResult');
+  if (!box.value.trim()){ box.focus(); return; }
+  const found = parseCardText(box.value);
+  if (!found.length){
+    res.innerHTML = '<div class="pr warn">⚠️ 승인 내역을 찾지 못했습니다. 금액(원)과 날짜·시간(예: 09/28 19:55)이 들어 있는지 확인해 주세요.</div>' + res.innerHTML;
+    box.focus(); return;
+  }
+  const keys = new Set(DB.tx.map(txKey));
+  const adds = [], dups = [];
+  for (const f of found){
+    const k = txKey(f);
+    if (keys.has(k)){ dups.push(f); continue; }
+    keys.add(k);
+    adds.push({ id: uid(), type:'expense', date:f.date, time:f.time, amount:f.amount, merchant:f.merchant,
+      category: guessCategory(f.merchant), user:f.user, card:f.card, installment:f.installment, cancel:!!f.cancel, memo:'', source:'sms' });
+  }
+  btn.disabled = true;
+  const ok = !adds.length || await commitTx(adds);
+  btn.disabled = false;
+  if (!ok) return;           // 저장 실패 시 입력 내용 유지
+  box.value = ''; box.focus();
+  const line = t => `${+t.date.slice(5,7)}/${+t.date.slice(8,10)} ${esc(t.merchant)} <b>${won(t.amount)}</b>${t.cancel?' (취소)':''}`;
+  res.innerHTML =
+    adds.map(t => `<div class="pr ok" onclick="openEdit('${t.id}')">✅ ${line(t)} <span class="muted">· ${esc(t.category)} · 눌러서 수정</span></div>`).join('') +
+    dups.map(t => `<div class="pr dup">↩︎ ${line(t)} <span class="muted">· 이미 저장된 내역이라 건너뜀</span></div>`).join('') +
+    res.innerHTML;
+  // 결과 목록은 최근 20줄만 유지
+  [...res.children].slice(20).forEach(e => e.remove());
+  if (adds.length){ cur = periodOf(adds[0].date); renderList(); renderStats(); }
+  toast(adds.length ? `${adds.length}건 저장했습니다.` + (dups.length ? ` (중복 ${dups.length}건 제외)` : '') : '이미 저장된 내역입니다.');
 }
 
 // 업로드 이벤트
