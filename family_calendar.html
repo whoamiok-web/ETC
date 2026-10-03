@@ -106,6 +106,9 @@ details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
 .ch.hol{--c:var(--hol);color:color-mix(in srgb,var(--hol) 62%,var(--ink));padding:0 8px;}
 .ch.hol i{display:none;}
 .num.hol{color:var(--hol);}
+.num small{display:block;font-size:10px;line-height:1;font-weight:500;color:var(--sub);margin-top:1px;}
+.num small.l1{font-weight:800;color:var(--ink);}
+body.lunar{--numh:50px;}
 .ch.cl{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0;}
 .ch.cr{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0;}
 .more{font-size:11.5px;color:var(--sub);text-align:center;font-weight:600;line-height:16px;}
@@ -165,6 +168,9 @@ details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
 .form label.f{display:grid;gap:4px;font-size:12.5px;color:var(--sub);}
 .form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .form .two > *{min-width:0;}
+.form .three{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;}
+.form .three > *{min-width:0;}
+.form input[type=number]{width:100%;background:var(--card);border-color:transparent;}
 .form input[type=text],.form select,.form input[type=date],.form input[type=time]{width:100%;background:var(--card);border-color:transparent;}
 .form textarea{background:var(--card);border-color:transparent;}
 .check{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink);}
@@ -353,6 +359,7 @@ service cloud.firestore {
   <h2>표시</h2>
   <div class="card">
     <label class="check"><input type="checkbox" id="optHol" onchange="setOpt('hol', this.checked)"> 공휴일 표시 (2025~2027년)</label>
+    <label class="check" style="margin-top:8px"><input type="checkbox" id="optLunar" onchange="setOpt('lunar', this.checked)"> 달력에 음력 날짜 표시</label>
   </div>
 
   <h2>백업 / 복원</h2>
@@ -389,7 +396,7 @@ const DEFAULT_MEMBERS = [
   { id: 'm4', name: '둘째', color: '#2f9e6e' },
 ];
 const FAMILY_COLOR = '#6d7c75';  // 참여자를 고르지 않은 일정 = 가족 모두
-const REPEAT = { none: '반복 안 함', daily: '매일', weekly: '매주', monthly: '매월', yearly: '매년' };
+const REPEAT = { none: '반복 안 함', daily: '매일', weekly: '매주', monthly: '매월', yearly: '매년', lunar: '매년 (음력)' };
 
 // 대한민국 공휴일 (대체공휴일·선거일 포함). 음력 명절은 해마다 달라 직접 적어 둠.
 const HOLIDAYS = {
@@ -423,6 +430,48 @@ const validDate = (y, m, d) => d <= new Date(Date.UTC(y, m, 0)).getUTCDate();
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+
+/* ===================== 음력 =====================
+ * 브라우저에 들어 있는 한국 음력(단기력, Intl 'dangi')으로 변환. 지원하지 않으면 중국 음력, 그것도 없으면 음력 기능을 숨김. */
+const LUNAR_FMT = (() => {
+  for (const c of ['dangi', 'chinese']){
+    try {
+      const f = new Intl.DateTimeFormat('en-u-ca-' + c, { timeZone: 'UTC', year: 'numeric', month: 'numeric', day: 'numeric' });
+      if (f.resolvedOptions().calendar === c) return f;
+    } catch(e){}
+  }
+  return null;
+})();
+const LUNAR_CACHE = new Map();
+// 일 번호 → 음력 { y, m, d, leap }
+function lunar(n){
+  if (!LUNAR_FMT) return null;
+  let v = LUNAR_CACHE.get(n);
+  if (v) return v;
+  const p = {};
+  for (const x of LUNAR_FMT.formatToParts(new Date(n * 864e5))) p[x.type] = x.value;
+  const mm = String(p.month).match(/\d+/);
+  v = { y: +(p.relatedYear || p.year), m: mm ? +mm[0] : 0, d: +p.day, leap: !/^\d+$/.test(p.month) };
+  LUNAR_CACHE.set(n, v);
+  return v;
+}
+const fmtLunar = (L, short) => !L ? '' : short ? `${L.leap ? '윤' : ''}${L.m}.${L.d}` : `음력 ${L.leap ? '윤' : ''}${L.m}월 ${L.d}일`;
+// 음력 → 일 번호. 그런 달이 없으면 null, 30일이 없는 달의 30일은 그 달 마지막 날
+function solarOf(y, m, d, leap = false){
+  if (!LUNAR_FMT) return null;
+  const start = Date.UTC(y, 0, 18) / 864e5 + (m - 1) * 29 - 3;
+  for (let n = start; n < start + 130; n++){
+    const L = lunar(n);
+    if (L.y > y) return null;
+    if (L.y === y && L.m === m && L.leap === leap){
+      const t = n - L.d + d;
+      const T = lunar(t);
+      return T.m === m && T.leap === leap ? t : t - 1;
+    }
+  }
+  return null;
+}
+
 /* ===================== 저장소 ===================== */
 let DB = load();
 function load(){
@@ -441,7 +490,7 @@ function persist(){
   catch(e){ toast('저장하지 못했습니다. 브라우저 저장공간을 쓸 수 없는 상태입니다. 백업 내용을 복사해 두세요.'); }
 }
 let PREF = (() => { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch(e){ return {}; } })();
-PREF.hidden ||= []; PREF.hol ??= true;
+PREF.hidden ||= []; PREF.hol ??= true; PREF.lunar ??= true;
 PREF.dev ||= randomCode();            // 이 기기 표시 (내가 등록한 일정 구분)
 PREF.lastSeen ??= Date.now();         // 새 일정 확인 시각
 function savePref(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(PREF)); } catch(e){} }
@@ -458,6 +507,14 @@ function occurrences(ev, from, to){
   const add = s => { if (s <= until && s + dur >= from && s <= to && !skip.has(ds(s))) out.push({ ev, s, e: s + dur }); };
   const rep = ev.repeat || 'none';
   if (rep === 'none'){ add(s0); return out; }
+  if (rep === 'lunar'){
+    // 매년 음력 같은 날 (생신, 제사 등). 윤달이면 평달로 지냄
+    const L = ev.lunar || lunar(s0);
+    if (!L) { add(s0); return out; }
+    const y1 = lunar(Math.max(s0, from - dur)).y - 1, y2 = lunar(to).y;
+    for (let y = y1; y <= y2; y++){ const s = solarOf(y, L.m, L.d); if (s !== null && s >= s0) add(s); }
+    return out;
+  }
   if (rep === 'daily' || rep === 'weekly'){
     const step = rep === 'daily' ? 1 : 7;
     let s = s0 + Math.max(0, Math.ceil((from - dur - s0) / step)) * step;
@@ -528,7 +585,7 @@ function weekHTML(ws, first, last, occ, today){
     if (d < first || d > last) continue;
     const s = ds(d);
     const hol = PREF.hol && HOLIDAYS[s];
-    h += `<div class="num ${hol ? 'hol' : c === 0 || c === 6 ? 'we' : ''} ${d === today ? 'today' : ''}" style="grid-column:${c + 1}"><b>${+s.slice(8,10)}</b></div>`;
+    h += `<div class="num ${hol ? 'hol' : c === 0 || c === 6 ? 'we' : ''} ${d === today ? 'today' : ''}" style="grid-column:${c + 1}"><b>${+s.slice(8,10)}</b>${showLunar() ? `<small class="${lunar(d).d === 1 ? 'l1' : ''}">${fmtLunar(lunar(d), true)}</small>` : ''}</div>`;
     hits += `<button class="hit" style="grid-column:${c + 1}" onclick="dayTap('${s}')" aria-label="${fmtDay(s)}"></button>`;
     if (hidden[d]) h += `<div class="more" style="grid-column:${c + 1};grid-row:${MAXL + 2}">+${hidden[d]}개</div>`;
   }
@@ -548,7 +605,9 @@ function monthHTML(i, occ, today){
   for (let ws = first - new Date(first * 864e5).getUTCDay(); ws <= last; ws += 7) h += weekHTML(ws, first, last, occ, today);
   return h + '</section>';
 }
+const showLunar = () => PREF.lunar && !!LUNAR_FMT;
 function renderCal(){
+  document.body.classList.toggle('lunar', showLunar());
   const box = document.getElementById('months');
   const shown = VIEWNAME === 'cal';
   // 다시 그려도 보고 있던 자리 유지
@@ -619,7 +678,7 @@ function dayTap(s){
   SEL = s;
   const d = dn(s), list = occsInRange(d, d), hol = PREF.hol && HOLIDAYS[s];
   const el = document.createElement('div'); el.className = 'dlg sheet';
-  el.innerHTML = `<div class="box"><div class="row"><b style="font-size:19px">${fmtDay(s)}</b>${hol ? `<span class="holtag">${esc(hol)}</span>` : ''}
+  el.innerHTML = `<div class="box"><div class="row"><b style="font-size:19px">${fmtDay(s)}</b>${hol ? `<span class="holtag">${esc(hol)}</span>` : ''}${showLunar() ? `<span class="muted">${fmtLunar(lunar(d))}</span>` : ''}
       <span class="sp"></span><button class="ib" data-x aria-label="닫기">×</button></div>
     <div class="agenda" style="margin-top:12px">${list.length ? list.map(o => itemHTML(o, d)).join('') : '<div class="empty">일정이 없습니다.</div>'}</div>
     <button class="primary" data-add style="width:100%;margin-top:14px;padding:12px">＋ 이 날 일정 추가</button></div>`;
@@ -684,7 +743,7 @@ function whoPills(ev){
 }
 function itemHTML(o, day){
   const ev = o.ev;
-  const meta = [whoPills(ev), ev.place ? `<span>📍 ${esc(ev.place)}</span>` : '', ev.repeat && ev.repeat !== 'none' ? `<span>↻ ${REPEAT[ev.repeat]}</span>` : '']
+  const meta = [whoPills(ev), ev.place ? `<span>📍 ${esc(ev.place)}</span>` : '', ev.repeat && ev.repeat !== 'none' ? `<span>↻ ${ev.repeat === 'lunar' && ev.lunar ? `매년 음력 ${ev.lunar.m}.${ev.lunar.d}` : REPEAT[ev.repeat]}</span>` : '']
     .filter(Boolean).join('');
   return `<div class="item" style="--c:${esc(evColor(ev))}" role="button" tabindex="0"
       onclick="openEditor('${ev.id}','${ds(o.s)}')" onkeydown="if(event.key==='Enter')openEditor('${ev.id}','${ds(o.s)}')">
@@ -739,6 +798,12 @@ function openEditor(id, dateStr){
       <label class="f">시작 날짜<input type="date" id="f-date" required></label>
       <label class="f time">시작 시각<input type="time" id="f-start"></label>
     </div>
+    <div class="row" id="f-lunRow" style="margin-top:-6px"><label class="check"><input type="checkbox" id="f-lun"> 음력으로 입력</label><span class="sp"></span><span class="muted" id="f-lunLbl"></span></div>
+    <div class="three" id="f-lunBox" hidden>
+      <label class="f">음력 년<input type="number" id="f-ly" min="1901" max="2099" inputmode="numeric"></label>
+      <label class="f">월<select id="f-lm"></select></label>
+      <label class="f">일<select id="f-ld">${Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}">${i + 1}일</option>`).join('')}</select></label>
+    </div>
     <div class="two">
       <label class="f">끝 날짜<input type="date" id="f-end"></label>
       <label class="f time">끝 시각<input type="time" id="f-endTime"></label>
@@ -791,7 +856,45 @@ function openEditor(id, dateStr){
     const endV = $('#f-end').value;
     if (prevDate && endV) $('#f-end').value = ds(dn(nd) + Math.max(0, dn(endV) - dn(prevDate)));
     prevDate = nd;
+    if (!$('#f-lun').checked) lunFromDate();
+    lunLabel();
   };
+  // 음력 입력: 년·월·일을 고르면 양력 시작 날짜를 채움
+  let lunDay = e.lunar?.d || 0;   // 고른 음력 일 (30일이 없는 해에도 기억)
+  const lunMonths = y => {
+    const opts = [];
+    for (let m = 1; m <= 12; m++){
+      opts.push(`<option value="${m}">${m}월</option>`);
+      if (solarOf(y, m, 1, true) !== null) opts.push(`<option value="${m}L">윤${m}월</option>`);
+    }
+    return opts.join('');
+  };
+  const lunFromDate = () => {
+    const L = $('#f-date').value && lunar(dn($('#f-date').value)); if (!L) return;
+    $('#f-ly').value = L.y; $('#f-lm').innerHTML = lunMonths(L.y);
+    $('#f-lm').value = L.m + (L.leap ? 'L' : ''); $('#f-ld').value = L.d; lunDay = L.d;
+  };
+  const lunLabel = () => {
+    const v = $('#f-date').value;
+    $('#f-lunLbl').textContent = !v ? '' : $('#f-lun').checked ? `양력 ${v.slice(0,4)}년 ${fmtDay(v)}` : fmtLunar(lunar(dn(v)));
+  };
+  const lunToDate = () => {
+    const y = +$('#f-ly').value, mv = $('#f-lm').value, d = +$('#f-ld').value;
+    if (!(y >= 1901 && y <= 2099)) return;
+    const t = solarOf(y, parseInt(mv), d, mv.endsWith('L'));
+    if (t === null){ toast('그 해에는 이 음력 달이 없습니다.'); return; }
+    lunDay = d;
+    $('#f-date').value = ds(t); $('#f-date').onchange();
+  };
+  $('#f-ly').onchange = () => { const mv = $('#f-lm').value; $('#f-lm').innerHTML = lunMonths(+$('#f-ly').value); $('#f-lm').value = [...$('#f-lm').options].some(o => o.value === mv) ? mv : parseInt(mv); lunToDate(); };
+  $('#f-lm').onchange = lunToDate; $('#f-ld').onchange = lunToDate;
+  $('#f-lun').onchange = () => {
+    $('#f-lunBox').hidden = !$('#f-lun').checked;
+    if ($('#f-lun').checked){ lunFromDate(); if ($('#f-repeat').value === 'yearly'){ $('#f-repeat').value = 'lunar'; sync(); } }
+    lunLabel();
+  };
+  if (!LUNAR_FMT){ $('#f-lunRow').hidden = true; $('#f-repeat').querySelector('[value=lunar]')?.remove(); }
+  else { $('#f-lun').checked = !!e.lunarInput; $('#f-lunBox').hidden = !e.lunarInput; lunFromDate(); if (e.lunar?.d) $('#f-ld').value = e.lunar.d; lunLabel(); }
   $('#f-start').onchange = () => {
     const st = $('#f-start').value, et = $('#f-endTime').value;
     if (st && (!et || et <= st) && $('#f-end').value === $('#f-date').value){
@@ -817,6 +920,8 @@ function openEditor(id, dateStr){
       endTime: allDay ? '' : $('#f-endTime').value,
       who: who.filter(memberById),
       repeat: $('#f-repeat').value,
+      lunarInput: $('#f-lun').checked,
+      lunar: null,
       until: $('#f-repeat').value === 'none' ? '' : $('#f-until').value,
       place: $('#f-place').value.trim(),
       memo: $('#f-memo').value.trim(),
@@ -833,6 +938,12 @@ function openEditor(id, dateStr){
     if (!rec.end && !allDay && rec.start && rec.endTime && rec.endTime < rec.start){ toast('끝 시각이 시작 시각보다 빠릅니다.'); return; }
     if (rec.until && rec.until < rec.date){ toast('반복 끝나는 날이 시작 날짜보다 빠릅니다.'); return; }
     if (!allDay && !rec.start) rec.allDay = true;
+    if (rec.repeat === 'lunar'){
+      const L = lunar(dn(rec.date));
+      if (!L){ toast('이 기기에서는 음력을 계산할 수 없습니다.'); return; }
+      // 음력으로 입력했으면 고른 날(30일 포함), 아니면 시작 날짜의 음력 날짜. 윤달은 평달로
+      rec.lunar = { m: L.m, d: rec.lunarInput && lunDay ? lunDay : L.d };
+    }
     if (await commitEvent(rec)){
       if (!ev) pushNewEvent(rec);
       close();
@@ -907,6 +1018,7 @@ function renderMembers(){
   sel.innerHTML = `<option value="">선택 안 함</option>` + DB.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
   sel.value = memberById(PREF.me) ? PREF.me : '';
   document.getElementById('optHol').checked = PREF.hol;
+  document.getElementById('optLunar').checked = PREF.lunar;
   renderNotif();
 }
 function drawMemDraft(){
