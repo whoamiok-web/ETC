@@ -17,21 +17,21 @@
 /* 레이아웃: 상·하단 떠 있는 알약 버튼, 가장자리까지 꽉 찬 월 달력이 위아래로 이어짐 */
 :root{
   --bg:#ffffff; --card:#f3f4f6; --ink:#111214; --sub:#8b9098; --line:#e7e8eb; --thbg:#f3f4f6;
-  --accent:#111214; --onaccent:#ffffff; --neg:#d92d20; --today:#f04438; --hol:#2e9e6b;
+  --accent:#111214; --onaccent:#ffffff; --neg:#d92d20; --today:#f04438; --hol:#e5484d;
   --glass:rgba(255,255,255,.82); --shadow:0 4px 18px rgba(0,0,0,.10); --chip-a:20%;
   --tbh:68px; --numh:40px; --chiph:22px; --wkh:112px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#000000; --card:#1c1c1e; --ink:#f2f2f4; --sub:#8e8e93; --line:#2a2a2d; --thbg:#1c1c1e;
-    --accent:#f2f2f4; --onaccent:#000000; --neg:#ff6b60; --today:#ff453a; --hol:#4cc38a;
+    --accent:#f2f2f4; --onaccent:#000000; --neg:#ff6b60; --today:#ff453a; --hol:#ff6369;
     --glass:rgba(36,36,38,.82); --shadow:0 4px 18px rgba(0,0,0,.55); --chip-a:34%;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#000000; --card:#1c1c1e; --ink:#f2f2f4; --sub:#8e8e93; --line:#2a2a2d; --thbg:#1c1c1e;
-  --accent:#f2f2f4; --onaccent:#000000; --neg:#ff6b60; --today:#ff453a; --hol:#4cc38a;
+  --accent:#f2f2f4; --onaccent:#000000; --neg:#ff6b60; --today:#ff453a; --hol:#ff6369;
   --glass:rgba(36,36,38,.82); --shadow:0 4px 18px rgba(0,0,0,.55); --chip-a:34%;
   color-scheme:dark;
 }
@@ -102,7 +102,9 @@ details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
   font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;pointer-events:auto;}
 .ch i{flex:none;width:14px;height:14px;border-radius:50%;background:var(--c);}
 .ch span{overflow:hidden;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 8px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 8px),transparent);}
-.ch.hol{--c:var(--hol);}
+/* 공휴일: 가족 색과 헷갈리지 않게 바탕·점 없이 빨간 글씨 */
+.ch.hol{--c:var(--hol);background:transparent;color:var(--hol);padding-left:5px;}
+.ch.hol i{display:none;}
 .ch.cl{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0;}
 .ch.cr{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0;}
 .more{font-size:11.5px;color:var(--sub);text-align:center;font-weight:600;line-height:16px;}
@@ -582,6 +584,13 @@ function goToday(){
   SEL = todayStr();
   if (VIEWNAME !== 'cal') tab('cal');
   showMonth(ymIdx(SEL));
+  // 월말이면 오늘이 있는 주가 아래 버튼에 가리지 않게 조금 더 내림
+  const wk = document.querySelector('.num.today')?.closest('.wkwrap');
+  if (wk){
+    const r = wk.getBoundingClientRect(), limit = innerHeight - 90;
+    if (r.bottom > limit) scrollBy(0, Math.min(r.bottom - limit, r.top - topH() - 8));
+  }
+  SCROLL.cal = scrollY;
 }
 // 위아래 끝에 가까워지면 달을 더 붙임
 let scrollTick = false;
@@ -1310,15 +1319,20 @@ document.querySelector('.bb [data-v="cal"]').classList.add('on');
 document.getElementById('leftLbl').textContent = `${ymY(CUR)}년`;
 try { history.scrollRestoration = 'manual'; } catch(e){}
 renderAll();
-showMonth(CUR);
-// 브라우저가 불러온 뒤 스크롤을 맨 위로 되돌리는 경우가 있어 한 번 더 이번 달로
-addEventListener('load', () => { if (VIEWNAME === 'cal' && scrollY < 50) showMonth(ymIdx(todayStr())); });
-try { const v = sessionStorage.getItem('familyCalendar.tab'); if (v && v !== 'cal' && document.getElementById('v-' + v)) tab(v); } catch(e){}
+goToday();
+// 브라우저가 불러온 뒤 스크롤을 맨 위로 되돌리는 경우가 있어 한 번 더 오늘로
+addEventListener('load', () => { if (VIEWNAME === 'cal' && scrollY < 50) goToday(); });
+// 홈 화면 앱은 언제나 달력의 오늘에서 시작. 브라우저 새로고침은 보던 탭 유지
+try { const v = sessionStorage.getItem('familyCalendar.tab'); if (!isHomeApp() && v && v !== 'cal' && document.getElementById('v-' + v)) tab(v); } catch(e){}
 initShared();
 // 자정이 지나면 '오늘' 갱신
 let lastToday = todayStr();
+let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && todayStr() !== lastToday){ lastToday = todayStr(); renderCal(); renderList(); renderTodo(); }
+  if (document.visibilityState === 'hidden'){ hiddenAt = Date.now(); return; }
+  if (todayStr() !== lastToday){ lastToday = todayStr(); renderCal(); renderList(); renderTodo(); }
+  // 홈 화면 앱을 1분 넘게 쉬었다가 다시 열면 오늘로 (입력 중인 창이 있으면 그대로)
+  if (isHomeApp() && hiddenAt && Date.now() - hiddenAt > 60e3 && !document.querySelector('.dlg')) goToday();
 });
 </script>
 </body>
