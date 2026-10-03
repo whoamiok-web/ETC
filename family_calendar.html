@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="가족달력">
+<meta name="theme-color" content="#2f7a5f">
+<link rel="apple-touch-icon" href="icons/cal-apple-touch-icon.png?v=1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/cal-favicon-32.png?v=1">
+<link rel="icon" type="image/svg+xml" href="icons/cal-icon.svg?v=1">
+<link rel="manifest" href="icons/calendar.webmanifest">
+<title>우리 가족 달력</title>
+<style>
+:root{
+  --bg:#eef3f0; --card:#ffffff; --ink:#1b2a24; --sub:#66776f; --line:#dbe3df;
+  --thbg:#f3f6f4; --accent:#2f7a5f; --accentbg:#e1efe9; --neg:#c62828;
+  --sun:#d32f2f; --sat:#1e63c4; --today:#2f7a5f; --sel:#fff6d6; --selbd:#e0b833; --onaccent:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141a17; --card:#1e2622; --ink:#e4ece8; --sub:#98a8a0; --line:#2e3a34;
+    --thbg:#25302b; --accent:#6cc4a0; --accentbg:#1d3a2f; --neg:#ef9a9a;
+    --sun:#ff8a80; --sat:#82b1ff; --today:#6cc4a0; --sel:#3a3420; --selbd:#a8892a; --onaccent:#0f2a1f;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141a17; --card:#1e2622; --ink:#e4ece8; --sub:#98a8a0; --line:#2e3a34;
+  --thbg:#25302b; --accent:#6cc4a0; --accentbg:#1d3a2f; --neg:#ef9a9a;
+  --sun:#ff8a80; --sat:#82b1ff; --today:#6cc4a0; --sel:#3a3420; --selbd:#a8892a; --onaccent:#0f2a1f;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none!important;}
+body{margin:0 auto;background:var(--bg);color:var(--ink);
+  font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(90px + env(safe-area-inset-bottom,0px));max-width:860px;}
+h1{font-size:20px;margin:0;}
+h2{font-size:15px;margin:22px 0 10px;}
+.card{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:0 3px 10px #00000012;margin-bottom:12px;}
+.muted{color:var(--sub);font-size:12.5px;}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.sp{flex:1;}
+button{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:8px;padding:8px 12px;cursor:pointer;}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--onaccent);font-weight:700;}
+button.danger{color:var(--neg);}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card);
+  border:1px solid var(--line);border-radius:7px;padding:7px 8px;min-width:0;}
+textarea{width:100%;min-height:70px;resize:vertical;}
+textarea.code{font-size:12px;font-family:ui-monospace,Menlo,monospace;min-height:110px;}
+a{color:var(--accent);}
+details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
+
+/* 상단 */
+.top{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.sync{font-size:11.5px;color:var(--sub);display:flex;align-items:center;gap:5px;}
+.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--line);}
+.sync.on::before{background:#3bb37a;} .sync.err::before{background:var(--neg);}
+.sync.err{color:var(--neg);}
+
+/* 탭 */
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);z-index:10;}
+.tabs button{flex:1;border:0;border-radius:0;padding:12px 4px;background:transparent;color:var(--sub);font-size:13px;}
+.tabs button.on{color:var(--accent);font-weight:800;}
+.view{display:none;} .view.on{display:block;}
+
+/* 월 이동 */
+.monthbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.monthbar .ttl{font-size:19px;font-weight:800;min-width:9.5em;text-align:center;font-variant-numeric:tabular-nums;}
+.monthbar button{padding:6px 12px;}
+.monthbar .nav{font-size:18px;line-height:1;padding:6px 12px;}
+
+/* 구성원 필터 */
+.who{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--card);border-radius:999px;
+  padding:4px 10px 4px 7px;font-size:12.5px;cursor:pointer;color:var(--ink);}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+.chip.off{opacity:.4;}
+.chip.pick{border-width:2px;padding:3px 9px 3px 6px;}
+
+/* 달력 */
+.cal{background:var(--card);border-radius:12px;box-shadow:0 3px 10px #00000012;overflow:hidden;touch-action:pan-y;}
+.dow,.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+.dow div{font-size:12px;text-align:center;padding:7px 0;color:var(--sub);background:var(--thbg);font-weight:700;}
+.dow div:first-child{color:var(--sun);} .dow div:last-child{color:var(--sat);}
+.cell{min-height:88px;border-top:1px solid var(--line);border-left:1px solid var(--line);padding:3px 2px 4px;cursor:pointer;
+  display:flex;flex-direction:column;gap:2px;min-width:0;}
+.cell:nth-child(7n+1){border-left:0;}
+.cell .d{font-size:12.5px;font-weight:700;padding:1px 3px;display:flex;align-items:center;gap:3px;min-width:0;}
+.cell .d b{display:inline-grid;place-items:center;min-width:21px;height:21px;border-radius:50%;font-variant-numeric:tabular-nums;}
+.cell .d small{font-size:9.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cell.sun .d, .cell.hol .d{color:var(--sun);} .cell.sat .d{color:var(--sat);}
+.cell.out{background:var(--thbg);} .cell.out .d{opacity:.45;}
+.cell.today .d b{background:var(--today);color:var(--onaccent);}
+.cell.sel{background:var(--sel);box-shadow:inset 0 0 0 2px var(--selbd);}
+.ev{font-size:10.5px;line-height:1.35;color:#fff;border-radius:4px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:clip;}
+.ev.cont{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:-2px;}
+.more{font-size:10px;color:var(--sub);padding-left:3px;}
+.cell .dots{display:none;}
+
+/* 일정 목록 */
+.dayhead{display:flex;align-items:baseline;gap:8px;margin:16px 0 8px;}
+.dayhead h3{margin:0;font-size:15px;}
+.agenda{display:flex;flex-direction:column;gap:8px;}
+.item{display:flex;gap:10px;align-items:flex-start;background:var(--card);border-radius:10px;padding:10px 12px;cursor:pointer;
+  box-shadow:0 2px 6px #0000000d;border-left:4px solid var(--c,var(--accent));}
+.item .t{font-size:12px;color:var(--sub);min-width:62px;font-variant-numeric:tabular-nums;line-height:1.4;padding-top:1px;}
+.item .b{flex:1;min-width:0;}
+.item .ttl{font-size:14.5px;font-weight:700;word-break:break-word;}
+.item .meta{font-size:12px;color:var(--sub);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink);background:var(--thbg);border-radius:999px;padding:1px 8px 1px 5px;}
+.pill i{width:8px;height:8px;border-radius:50%;}
+.empty{text-align:center;color:var(--sub);font-size:13px;padding:18px 10px;background:var(--card);border-radius:10px;border:1px dashed var(--line);}
+.group{font-size:13px;font-weight:800;margin:18px 0 8px;display:flex;gap:6px;align-items:baseline;}
+.group .muted{font-weight:400;}
+.group.sun{color:var(--sun);} .group.sat{color:var(--sat);}
+
+.fab{position:fixed;right:max(18px, calc(50% - 412px));bottom:calc(70px + env(safe-area-inset-bottom,0px));z-index:11;
+  width:54px;height:54px;border-radius:50%;font-size:28px;line-height:1;padding:0;box-shadow:0 6px 16px #0000003a;}
+
+/* 할 일 */
+.todo{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);}
+.todo:first-child{border-top:0;}
+.todo input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);flex:none;}
+.todo .b{flex:1;min-width:0;}
+.todo .txt{font-size:14.5px;word-break:break-word;}
+.todo.done .txt{text-decoration:line-through;color:var(--sub);}
+.todo .x{border:0;background:transparent;color:var(--sub);font-size:18px;padding:2px 6px;}
+.due.late{color:var(--neg);font-weight:700;}
+
+/* 설정 */
+.mem{display:flex;gap:8px;align-items:center;padding:6px 0;}
+.mem input[type=text]{flex:1;}
+.mem input[type=color]{width:42px;height:34px;padding:2px;}
+.palette{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* 대화상자 */
+.dlg{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;z-index:50;padding:12px;}
+.dlg .box{background:var(--card);color:var(--ink);border-radius:14px;padding:16px;width:100%;max-width:520px;max-height:calc(100% - 24px);overflow:auto;
+  white-space:pre-line;font-size:14px;line-height:1.6;margin-bottom:env(safe-area-inset-bottom,0px);}
+@media (min-width:600px){ .dlg{align-items:center;} }
+.form{display:grid;gap:12px;white-space:normal;}
+.form label.f{display:grid;gap:4px;font-size:12.5px;color:var(--sub);}
+.form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.form .two > *{min-width:0;}
+.form input[type=text],.form select,.form input[type=date],.form input[type=time]{width:100%;}
+.check{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink);}
+.check input{width:18px;height:18px;accent-color:var(--accent);}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom,0px));background:#222c;color:#fff;
+  padding:10px 16px;border-radius:10px;font-size:13px;z-index:60;max-width:calc(100% - 32px);}
+
+@media (max-width:480px){
+  .cell{min-height:74px;}
+  .ev{font-size:10px;padding:0 3px;}
+  .monthbar .ttl{font-size:17px;min-width:0;flex:1;}
+}
+@media (prefers-reduced-motion: no-preference){
+  .cal{transition:opacity .12s;}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>우리 가족 달력</h1><span class="sp"></span>
+  <span class="sync" id="sync"><span>이 기기에만 저장</span></span>
+</div>
+
+<!-- ===================== 달력 ===================== -->
+<section class="view on" id="v-cal">
+  <div class="monthbar">
+    <button class="nav" onclick="moveMonth(-1)" aria-label="이전 달">‹</button>
+    <div class="ttl" id="monthTitle"></div>
+    <button class="nav" onclick="moveMonth(1)" aria-label="다음 달">›</button>
+    <span class="sp"></span>
+    <button onclick="goToday()">오늘</button>
+  </div>
+  <div class="who" id="filter"></div>
+  <div class="cal" id="cal"></div>
+  <div class="dayhead"><h3 id="dayTitle"></h3><span class="muted" id="dayHol"></span><span class="sp"></span>
+    <button onclick="openEditor(null, SEL)">＋ 이 날 일정</button></div>
+  <div class="agenda" id="dayList"></div>
+</section>
+
+<!-- ===================== 일정 목록 ===================== -->
+<section class="view" id="v-list">
+  <div class="row" style="margin-bottom:6px">
+    <input id="q" type="search" placeholder="일정 검색 (제목·장소·메모)" style="flex:1" oninput="renderList()" autocomplete="off">
+  </div>
+  <div class="muted" id="listNote"></div>
+  <div id="upcoming"></div>
+</section>
+
+<!-- ===================== 할 일 ===================== -->
+<section class="view" id="v-todo">
+  <div class="card">
+    <div class="row">
+      <input id="todoText" placeholder="할 일 (예: 우유 사기, 학원비 이체)" style="flex:1 1 220px" autocomplete="off"
+        onkeydown="if(event.key==='Enter'&&!event.isComposing)addTodo()">
+    </div>
+    <div class="row" style="margin-top:8px">
+      <select id="todoWho" aria-label="담당"></select>
+      <input id="todoDue" type="date" aria-label="기한">
+      <span class="sp"></span>
+      <button class="primary" onclick="addTodo()">추가</button>
+    </div>
+  </div>
+  <div class="who" id="todoFilter"></div>
+  <div class="card" id="todoOpen"></div>
+  <details id="todoDoneBox">
+    <summary id="todoDoneSum"></summary>
+    <div class="card" style="margin-top:8px" id="todoDone"></div>
+    <div class="row"><span class="sp"></span><button class="danger" onclick="clearDone()">완료 항목 지우기</button></div>
+  </details>
+</section>
+
+<!-- ===================== 설정 ===================== -->
+<section class="view" id="v-set">
+  <h2>이 기기 사용자</h2>
+  <div class="card">
+    <div class="row">
+      <span style="font-size:13.5px">나는</span>
+      <select id="meSel" onchange="setMe(this.value)"></select>
+      <span class="muted">새 일정의 기본 참여자로 들어갑니다.</span>
+    </div>
+  </div>
+
+  <h2>가족 구성원</h2>
+  <div class="card">
+    <div id="memList"></div>
+    <div class="row" style="margin-top:8px">
+      <input id="newMem" type="text" placeholder="이름 (예: 할머니)" style="flex:1" autocomplete="off"
+        onkeydown="if(event.key==='Enter'&&!event.isComposing)addMember()">
+      <button onclick="addMember()">추가</button>
+    </div>
+    <div class="row" style="margin-top:10px"><span class="muted">이름과 색을 바꾼 뒤 저장하세요.</span><span class="sp"></span>
+      <button class="primary" onclick="saveMembers()">구성원 저장</button></div>
+  </div>
+
+  <h2>가족과 공유</h2>
+  <div class="card" id="homeAppNote" hidden>
+    <div style="font-size:13.5px;line-height:1.7"><b>홈 화면 앱은 브라우저와 저장공간이 따로입니다.</b> 브라우저에서 이미 공유 달력을 쓰고 있다면, 그 화면의 <b>공유 링크 복사</b>로 복사한 링크를 아래 칸에 붙여넣어 연결하세요.</div>
+  </div>
+  <div class="card" id="shareOn" hidden>
+    <div style="font-size:13.5px;line-height:1.7">
+      <b>공유 달력에 연결됨</b> <span class="muted">· Firebase 프로젝트 <span id="shareProject"></span></span><br>
+      <span class="muted">아래 링크를 가족에게 보내면, 링크를 여는 것만으로 같은 달력이 연결됩니다. 링크를 아는 사람은 누구나 볼 수 있으니 가족끼리만 공유하세요.</span>
+    </div>
+    <input id="shareLinkBox" readonly style="width:100%;margin-top:10px;font-size:12px" onclick="this.select()">
+    <div class="row" style="margin-top:10px">
+      <button class="primary" onclick="copyShareLink()">공유 링크 복사</button>
+      <span class="sp"></span>
+      <button class="danger" onclick="disconnectShare()">이 기기 연결 끊기</button>
+    </div>
+    <div class="row" id="migrate" hidden style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
+      <span class="muted"></span><span class="sp"></span><button onclick="uploadLocal()">공유 달력으로 옮기기</button>
+    </div>
+  </div>
+  <div class="card" id="shareOff">
+    <div style="font-size:13.5px;line-height:1.7"><b>가족이 보낸 공유 링크가 있나요?</b> 링크를 붙여넣으세요.</div>
+    <div class="row" style="margin:8px 0 14px">
+      <input id="joinLink" placeholder="https://…/family_calendar.html#join=…" style="flex:1" autocomplete="off">
+      <button class="primary" onclick="joinPasted()">연결</button>
+    </div>
+    <div id="reuseLedger" hidden style="font-size:13.5px;line-height:1.7;border-top:1px solid var(--line);padding-top:12px;margin-bottom:12px">
+      <b>가계부에 연결한 Firebase가 있습니다.</b> 같은 프로젝트에 달력을 따로 만들 수 있습니다. (추가 설정 없음)
+      <div class="row" style="margin-top:8px"><span class="sp"></span><button class="primary" onclick="reuseLedgerFirebase()">가계부 Firebase로 공유 달력 만들기</button></div>
+    </div>
+    <div style="font-size:13.5px;line-height:1.7;border-top:1px solid var(--line);padding-top:12px">
+      지금은 <b>이 기기에만</b> 저장됩니다. Google <b>Firebase 무료 요금제</b>를 연결하면 가족 모두가 같은 달력을 실시간으로 봅니다. (한 번만 설정, 약 5분)
+    </div>
+    <details>
+      <summary>설정 방법 보기</summary>
+      <ol style="font-size:13px;line-height:1.75;padding-left:20px;margin:8px 0">
+        <li><a href="https://console.firebase.google.com/" target="_blank" rel="noopener">Firebase 콘솔</a>에 Google 계정으로 로그인 → <b>프로젝트 만들기</b> (이름 예: our-family, 애널리틱스는 꺼도 됨)</li>
+        <li>왼쪽 메뉴 <b>빌드 → Authentication → 시작하기</b> → 로그인 방법에서 <b>익명</b>을 <b>사용 설정</b> 후 저장</li>
+        <li><b>빌드 → Firestore Database → 데이터베이스 만들기</b> → 위치 <b>asia-northeast3 (서울)</b> → <b>프로덕션 모드</b>로 시작</li>
+        <li>Firestore의 <b>규칙</b> 탭에 아래 규칙을 붙여넣고 <b>게시</b> (가계부와 같은 규칙이라, 가계부용 프로젝트를 그대로 써도 됩니다)</li>
+        <li>프로젝트 개요 옆 ⚙️ <b>프로젝트 설정</b> → 아래쪽 <b>내 앱</b>에서 웹(<b>&lt;/&gt;</b>) 앱 추가 → 나오는 <b>firebaseConfig</b> 부분을 복사해 아래 칸에 붙여넣기</li>
+      </ol>
+      <textarea readonly class="code" id="fbRules" onclick="this.select()">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /households/{hid}/{rest=**} {
+      allow read, write: if request.auth != null && hid.size() >= 16;
+    }
+  }
+}</textarea>
+    </details>
+    <textarea id="fbConfig" class="code" style="margin-top:10px" placeholder='const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "our-family.firebaseapp.com",
+  projectId: "our-family",
+  ...
+};'></textarea>
+    <div class="row" style="margin-top:8px">
+      <span class="muted">가족은 설정 없이 공유 링크만 열면 됩니다.</span><span class="sp"></span>
+      <button class="primary" onclick="connectShare()">연결하고 공유 달력 만들기</button>
+    </div>
+  </div>
+
+  <h2>표시</h2>
+  <div class="card">
+    <label class="check"><input type="checkbox" id="optHol" onchange="setOpt('hol', this.checked)"> 공휴일 표시 (2025~2027년)</label>
+  </div>
+
+  <h2>백업 / 복원</h2>
+  <div class="card">
+    <div class="muted" id="backupNote">이 기기 브라우저에 저장됩니다. 브라우저 데이터를 지우면 사라지니 가끔 백업해 두세요.</div>
+    <div class="row" style="margin-top:10px">
+      <button onclick="exportJSON()">백업 내용 보기</button>
+      <label class="row" style="gap:6px"><button onclick="document.getElementById('importFile').click()">백업 파일 복원</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden onchange="importJSON(this)"></label>
+    </div>
+    <textarea id="backupBox" class="code" readonly hidden style="margin-top:10px" onclick="this.select()"></textarea>
+  </div>
+</section>
+
+<button class="primary fab" id="fab" onclick="openEditor(null, SEL)" aria-label="일정 추가">＋</button>
+
+<nav class="tabs">
+  <button class="on" data-v="cal" onclick="tab('cal')">달력</button>
+  <button data-v="list" onclick="tab('list')">일정 목록</button>
+  <button data-v="todo" onclick="tab('todo')">할 일</button>
+  <button data-v="set" onclick="tab('set')">설정</button>
+</nav>
+
+<script>
+/* ===================== 기본 데이터 ===================== */
+const KEY = 'familyCalendar.v1';
+const PREF_KEY = 'familyCalendar.prefs';   // 이 기기 전용: 나, 필터, 공휴일 표시
+const COLORS = ['#e0607e','#3f7fd6','#e08a2e','#2f9e6e','#8b5cc7','#c9a227','#16a0b5','#7a8a99'];
+const DEFAULT_MEMBERS = [
+  { id: 'm1', name: '엄마', color: '#e0607e' },
+  { id: 'm2', name: '아빠', color: '#3f7fd6' },
+  { id: 'm3', name: '첫째', color: '#e08a2e' },
+  { id: 'm4', name: '둘째', color: '#2f9e6e' },
+];
+const FAMILY_COLOR = '#6d7c75';  // 참여자를 고르지 않은 일정 = 가족 모두
+const REPEAT = { none: '반복 안 함', daily: '매일', weekly: '매주', monthly: '매월', yearly: '매년' };
+
+// 대한민국 공휴일 (대체공휴일·선거일 포함). 음력 명절은 해마다 달라 직접 적어 둠.
+const HOLIDAYS = {
+  '2025-01-01':'신정','2025-01-27':'임시공휴일','2025-01-28':'설날 연휴','2025-01-29':'설날','2025-01-30':'설날 연휴',
+  '2025-03-01':'삼일절','2025-03-03':'대체공휴일','2025-05-05':'어린이날·부처님오신날','2025-05-06':'대체공휴일',
+  '2025-06-03':'대통령선거','2025-06-06':'현충일','2025-08-15':'광복절','2025-10-03':'개천절',
+  '2025-10-05':'추석 연휴','2025-10-06':'추석','2025-10-07':'추석 연휴','2025-10-08':'대체공휴일','2025-10-09':'한글날','2025-12-25':'성탄절',
+  '2026-01-01':'신정','2026-02-16':'설날 연휴','2026-02-17':'설날','2026-02-18':'설날 연휴',
+  '2026-03-01':'삼일절','2026-03-02':'대체공휴일','2026-05-05':'어린이날','2026-05-24':'부처님오신날','2026-05-25':'대체공휴일',
+  '2026-06-03':'지방선거','2026-06-06':'현충일','2026-08-15':'광복절','2026-08-17':'대체공휴일',
+  '2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절','2026-10-05':'대체공휴일',
+  '2026-10-09':'한글날','2026-12-25':'성탄절',
+  '2027-01-01':'신정','2027-02-06':'설날 연휴','2027-02-07':'설날','2027-02-08':'설날 연휴','2027-02-09':'대체공휴일',
+  '2027-03-01':'삼일절','2027-05-05':'어린이날','2027-05-13':'부처님오신날','2027-06-06':'현충일',
+  '2027-08-15':'광복절','2027-08-16':'대체공휴일','2027-09-14':'추석 연휴','2027-09-15':'추석','2027-09-16':'추석 연휴',
+  '2027-10-03':'개천절','2027-10-04':'대체공휴일','2027-10-09':'한글날','2027-10-11':'대체공휴일',
+  '2027-12-25':'성탄절','2027-12-27':'대체공휴일',
+};
+
+/* ===================== 날짜 도우미 =====================
+ * 날짜는 'YYYY-MM-DD' 문자열로 저장하고, 계산은 '일 번호'(1970-01-01부터 며칠째)로 합니다. */
+const pad = n => String(n).padStart(2, '0');
+const dn = s => Date.UTC(+s.slice(0,4), +s.slice(5,7) - 1, +s.slice(8,10)) / 864e5;
+const ds = n => { const d = new Date(n * 864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; };
+const dowOf = s => new Date(dn(s) * 864e5).getUTCDay();
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const DOW = ['일','월','화','수','목','금','토'];
+const fmtDay = s => `${+s.slice(5,7)}월 ${+s.slice(8,10)}일 (${DOW[dowOf(s)]})`;
+const fmtTime = t => { if (!t) return ''; const [h, m] = t.split(':').map(Number); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}${m ? ':' + pad(m) : '시'}`; };
+const validDate = (y, m, d) => d <= new Date(Date.UTC(y, m, 0)).getUTCDate();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* ===================== 저장소 ===================== */
+let DB = load();
+function load(){
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(KEY)); } catch(e){}
+  d = d || {};
+  return {
+    members: d.members?.length ? d.members : DEFAULT_MEMBERS.map(m => ({ ...m })),
+    events: d.events || [],
+    todos: d.todos || [],
+  };
+}
+function persist(){
+  if (S.db) return;   // 공유 모드에서는 서버가 원본
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch(e){ toast('저장하지 못했습니다. 브라우저 저장공간을 쓸 수 없는 상태입니다. 백업 내용을 복사해 두세요.'); }
+}
+let PREF = (() => { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch(e){ return {}; } })();
+PREF.hidden ||= []; PREF.hol ??= true;
+function savePref(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(PREF)); } catch(e){} }
+const memberById = id => DB.members.find(m => m.id === id);
+const evColor = ev => memberById(ev.who?.[0])?.color || FAMILY_COLOR;
+
+/* ===================== 반복 일정 펼치기 =====================
+ * from~to(일 번호) 사이에 걸치는 모든 발생을 { ev, s: 시작일번호, e: 종료일번호 } 로 돌려줍니다. */
+function occurrences(ev, from, to){
+  const s0 = dn(ev.date), dur = Math.max(0, dn(ev.end || ev.date) - s0);
+  const until = ev.until ? dn(ev.until) : Infinity;
+  const skip = new Set(ev.skip || []);
+  const out = [];
+  const add = s => { if (s <= until && s + dur >= from && s <= to && !skip.has(ds(s))) out.push({ ev, s, e: s + dur }); };
+  const rep = ev.repeat || 'none';
+  if (rep === 'none'){ add(s0); return out; }
+  if (rep === 'daily' || rep === 'weekly'){
+    const step = rep === 'daily' ? 1 : 7;
+    let s = s0 + Math.max(0, Math.ceil((from - dur - s0) / step)) * step;
+    for (; s <= to && s <= until; s += step) add(s);
+    return out;
+  }
+  const y0 = +ev.date.slice(0,4), m0 = +ev.date.slice(5,7), d0 = +ev.date.slice(8,10);
+  const fy = +ds(from - dur).slice(0,4), fm = +ds(from - dur).slice(5,7);
+  if (rep === 'monthly'){
+    let i = Math.max(0, (fy - y0) * 12 + (fm - m0));
+    for (;; i++){
+      const y = y0 + Math.floor((m0 - 1 + i) / 12), m = (m0 - 1 + i) % 12 + 1;
+      const first = Date.UTC(y, m - 1, 1) / 864e5;
+      if (first > to || first > until) break;
+      if (validDate(y, m, d0)) add(first + d0 - 1);
+    }
+  } else if (rep === 'yearly'){
+    for (let y = Math.max(y0, fy); ; y++){
+      const first = Date.UTC(y, 0, 1) / 864e5;
+      if (first > to || first > until) break;
+      if (validDate(y, m0, d0)) add(Date.UTC(y, m0 - 1, d0) / 864e5);
+    }
+  }
+  return out;
+}
+const visible = ev => !ev.who?.length || ev.who.some(id => !PREF.hidden.includes(id)) || ev.who.every(id => !memberById(id));
+function occsInRange(from, to, all = false){
+  const list = [];
+  for (const ev of DB.events) if (all || visible(ev)) list.push(...occurrences(ev, from, to));
+  return list.sort(byOcc);
+}
+// 정렬: 시작일 → 여러 날/종일 먼저 → 시작 시각
+function byOcc(a, b){
+  return a.s - b.s || (b.e - b.s) - (a.e - a.s) || (a.ev.allDay ? 0 : 1) - (b.ev.allDay ? 0 : 1)
+    || (a.ev.start || '').localeCompare(b.ev.start || '') || a.ev.title.localeCompare(b.ev.title);
+}
+
+/* ===================== 화면: 달력 ===================== */
+let VIEW = { y: +todayStr().slice(0,4), m: +todayStr().slice(5,7) };
+let SEL = todayStr();
+function moveMonth(k){
+  let m = VIEW.m + k, y = VIEW.y;
+  while (m < 1){ m += 12; y--; } while (m > 12){ m -= 12; y++; }
+  VIEW = { y, m };
+  // 선택한 날도 같은 달로 (일자가 없으면 말일)
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  SEL = `${y}-${pad(m)}-${pad(Math.min(+SEL.slice(8,10), last))}`;
+  renderCal();
+}
+function goToday(){ SEL = todayStr(); VIEW = { y: +SEL.slice(0,4), m: +SEL.slice(5,7) }; renderCal(); }
+function pickDay(s){
+  SEL = s;
+  const y = +s.slice(0,4), m = +s.slice(5,7);
+  if (y !== VIEW.y || m !== VIEW.m) VIEW = { y, m };
+  renderCal();
+}
+function renderFilter(){
+  const html = DB.members.map(m => `<span class="chip ${PREF.hidden.includes(m.id) ? 'off' : ''}" role="button" tabindex="0"
+      onclick="toggleFilter('${m.id}')" onkeydown="if(event.key==='Enter')toggleFilter('${m.id}')"><i style="background:${esc(m.color)}"></i>${esc(m.name)}</span>`).join('');
+  document.getElementById('filter').innerHTML = html;
+}
+function toggleFilter(id){
+  PREF.hidden = PREF.hidden.includes(id) ? PREF.hidden.filter(x => x !== id) : [...PREF.hidden, id];
+  savePref(); renderCal(); renderList();
+}
+function renderCal(){
+  const { y, m } = VIEW;
+  document.getElementById('monthTitle').textContent = `${y}년 ${m}월`;
+  renderFilter();
+  const first = Date.UTC(y, m - 1, 1) / 864e5;
+  const start = first - new Date(first * 864e5).getUTCDay();
+  const lastDay = Date.UTC(y, m, 0) / 864e5;
+  const weeks = Math.ceil((lastDay - start + 1) / 7);
+  const end = start + weeks * 7 - 1;
+  const occ = occsInRange(start, end);
+  const byDay = {};
+  for (const o of occ) for (let d = Math.max(o.s, start); d <= Math.min(o.e, end); d++) (byDay[d] ||= []).push(o);
+  const today = dn(todayStr()), sel = dn(SEL);
+  const narrow = matchMedia('(max-width:480px)').matches;
+  const maxShow = narrow ? 3 : 4;
+  let html = '<div class="dow">' + DOW.map(d => `<div>${d}</div>`).join('') + '</div>';
+  for (let w = 0; w < weeks; w++){
+    html += '<div class="week">';
+    for (let i = 0; i < 7; i++){
+      const d = start + w * 7 + i, s = ds(d);
+      const hol = PREF.hol ? HOLIDAYS[s] : '';
+      const cls = ['cell', i === 0 && 'sun', i === 6 && 'sat', hol && 'hol', +s.slice(5,7) !== m && 'out', d === today && 'today', d === sel && 'sel'].filter(Boolean).join(' ');
+      const list = byDay[d] || [];
+      const shown = list.length > maxShow ? list.slice(0, maxShow - 1) : list;
+      const chips = shown.map(o => {
+        const cont = o.s < d && i !== 0;   // 앞날에서 이어지는 여러 날 일정
+        return `<div class="ev ${cont ? 'cont' : ''}" style="background:${esc(evColor(o.ev))}">${cont ? '&nbsp;' : esc(o.ev.title)}</div>`;
+      }).join('');
+      const more = list.length > shown.length ? `<div class="more">+${list.length - shown.length}</div>` : '';
+      html += `<div class="${cls}" onclick="pickDay('${s}')" role="button" tabindex="0" aria-label="${fmtDay(s)} 일정 ${list.length}개"
+        onkeydown="if(event.key==='Enter')pickDay('${s}')"><div class="d"><b>${+s.slice(8,10)}</b>${hol ? `<small>${esc(hol)}</small>` : ''}</div>${chips}${more}</div>`;
+    }
+    html += '</div>';
+  }
+  document.getElementById('cal').innerHTML = html;
+  renderDay();
+}
+function renderDay(){
+  document.getElementById('dayTitle').textContent = fmtDay(SEL) + (SEL === todayStr() ? ' · 오늘' : '');
+  document.getElementById('dayHol').textContent = (PREF.hol && HOLIDAYS[SEL]) || '';
+  const d = dn(SEL);
+  const list = occsInRange(d, d);
+  document.getElementById('dayList').innerHTML = list.length ? list.map(o => itemHTML(o, d)).join('')
+    : `<div class="empty">일정이 없습니다. 아래 <b>＋</b> 버튼으로 추가하세요.</div>`;
+}
+function timeLabel(o, day){
+  const ev = o.ev;
+  if (o.s !== o.e){
+    const n = day - o.s + 1, tot = o.e - o.s + 1;
+    const part = day === o.s && !ev.allDay ? fmtTime(ev.start) + ' 시작' : day === o.e && !ev.allDay ? fmtTime(ev.endTime) + ' 끝' : '종일';
+    return `${part}<br><span style="font-size:11px">${n}/${tot}일째</span>`;
+  }
+  if (ev.allDay) return '종일';
+  return fmtTime(ev.start) + (ev.endTime ? `<br>~ ${fmtTime(ev.endTime)}` : '');
+}
+function whoPills(ev){
+  if (!ev.who?.length) return `<span class="pill"><i style="background:${FAMILY_COLOR}"></i>가족 모두</span>`;
+  return ev.who.map(memberById).filter(Boolean).map(m => `<span class="pill"><i style="background:${esc(m.color)}"></i>${esc(m.name)}</span>`).join('');
+}
+function itemHTML(o, day){
+  const ev = o.ev;
+  const meta = [whoPills(ev), ev.place ? `<span>📍 ${esc(ev.place)}</span>` : '', ev.repeat && ev.repeat !== 'none' ? `<span>↻ ${REPEAT[ev.repeat]}</span>` : '']
+    .filter(Boolean).join('');
+  return `<div class="item" style="--c:${esc(evColor(ev))}" role="button" tabindex="0"
+      onclick="openEditor('${ev.id}','${ds(o.s)}')" onkeydown="if(event.key==='Enter')openEditor('${ev.id}','${ds(o.s)}')">
+    <div class="t">${timeLabel(o, day)}</div>
+    <div class="b"><div class="ttl">${esc(ev.title)}</div><div class="meta">${meta}</div>
+    ${ev.memo ? `<div class="muted" style="margin-top:4px;white-space:pre-line;word-break:break-word">${esc(ev.memo)}</div>` : ''}</div></div>`;
+}
+
+// 좌우로 밀어서 달 넘기기
+(() => {
+  let x0 = null, y0 = null;
+  const el = document.getElementById('cal');
+  el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) moveMonth(dx < 0 ? 1 : -1);
+    x0 = null;
+  }, { passive: true });
+})();
+
+/* ===================== 화면: 일정 목록 ===================== */
+function renderList(){
+  const q = document.getElementById('q').value.trim().toLowerCase();
+  const t = dn(todayStr());
+  const from = q ? t - 365 : t, to = q ? t + 365 : t + 90;
+  let occ = occsInRange(from, to, !!q);
+  if (q) occ = occ.filter(o => [o.ev.title, o.ev.place, o.ev.memo].some(v => (v || '').toLowerCase().includes(q)));
+  else occ = occ.filter(o => o.e >= t);
+  document.getElementById('listNote').textContent = q ? `작년부터 내년까지 ${occ.length}건` : '오늘부터 90일 동안의 일정';
+  if (!occ.length){
+    document.getElementById('upcoming').innerHTML = `<div class="empty" style="margin-top:12px">${q ? '찾는 일정이 없습니다.' : '앞으로 90일 동안 일정이 없습니다.'}</div>`;
+    return;
+  }
+  let html = '', last = null;
+  for (const o of occ){
+    const day = Math.max(o.s, q ? o.s : t);
+    if (day !== last){
+      const s = ds(day), w = dowOf(s), hol = PREF.hol && HOLIDAYS[s];
+      const rel = day === t ? '오늘' : day === t + 1 ? '내일' : day > t ? `${day - t}일 뒤` : '';
+      html += `<div class="group ${w === 0 || hol ? 'sun' : w === 6 ? 'sat' : ''}">${+s.slice(0,4) !== VIEW.y || q ? s.slice(0,4) + '년 ' : ''}${fmtDay(s)}<span class="muted">${[rel, hol].filter(Boolean).join(' · ')}</span></div>`;
+      last = day;
+    }
+    html += `<div class="agenda" style="margin-bottom:8px">${itemHTML(o, day)}</div>`;
+  }
+  document.getElementById('upcoming').innerHTML = html;
+}
+
+/* ===================== 일정 편집 ===================== */
+function openEditor(id, dateStr){
+  const ev = id ? DB.events.find(e => e.id === id) : null;
+  if (id && !ev){ toast('이 일정은 다른 가족이 지웠습니다.'); return; }
+  const me = PREF.me && memberById(PREF.me) ? [PREF.me] : [];
+  const e = ev ? { ...ev } : { title: '', date: dateStr || todayStr(), end: '', allDay: false, start: '10:00', endTime: '11:00', who: me, repeat: 'none', until: '', place: '', memo: '' };
+  const occDate = dateStr || e.date;
+  const recurring = ev && ev.repeat && ev.repeat !== 'none';
+  const d = document.createElement('div'); d.className = 'dlg';
+  d.innerHTML = `<form class="box form" id="evForm" autocomplete="off">
+    <div class="row"><b style="font-size:16px">${ev ? '일정 수정' : '새 일정'}</b><span class="sp"></span>
+      ${recurring ? `<span class="muted">${fmtDay(occDate)} 발생</span>` : ''}</div>
+    <label class="f">제목<input type="text" id="f-title" required maxlength="80" placeholder="예: 첫째 피아노 학원, 할머니 생신"></label>
+    <label class="check"><input type="checkbox" id="f-allDay"> 종일</label>
+    <div class="two">
+      <label class="f">시작 날짜<input type="date" id="f-date" required></label>
+      <label class="f time">시작 시각<input type="time" id="f-start"></label>
+    </div>
+    <div class="two">
+      <label class="f">끝 날짜<input type="date" id="f-end"></label>
+      <label class="f time">끝 시각<input type="time" id="f-endTime"></label>
+    </div>
+    <div class="f" style="display:grid;gap:6px;font-size:12.5px;color:var(--sub)">누구 일정인가요? <span style="font-size:11.5px">(아무도 고르지 않으면 가족 모두)</span>
+      <div class="who" id="f-who" style="margin:0"></div></div>
+    <div class="two">
+      <label class="f">반복<select id="f-repeat">${Object.entries(REPEAT).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+      <label class="f" id="f-untilBox">반복 끝나는 날<input type="date" id="f-until"></label>
+    </div>
+    <label class="f">장소<input type="text" id="f-place" maxlength="80" placeholder="선택"></label>
+    <label class="f">메모<textarea id="f-memo" maxlength="1000" placeholder="준비물, 연락처 등"></textarea></label>
+    <div class="muted" id="f-by"></div>
+    <div class="row" style="justify-content:flex-end">
+      ${ev ? `<button type="button" class="danger" id="f-del">삭제</button><span class="sp"></span>` : ''}
+      <button type="button" id="f-cancel">취소</button>
+      <button type="submit" class="primary">저장</button>
+    </div></form>`;
+  document.body.appendChild(d);
+  const $ = s => d.querySelector(s);
+  $('#f-title').value = e.title; $('#f-allDay').checked = !!e.allDay;
+  $('#f-date').value = e.date; $('#f-end').value = e.end || e.date;
+  $('#f-start').value = e.start || ''; $('#f-endTime').value = e.endTime || '';
+  $('#f-repeat').value = e.repeat || 'none'; $('#f-until').value = e.until || '';
+  $('#f-place').value = e.place || ''; $('#f-memo').value = e.memo || '';
+  if (ev?.byName) $('#f-by').textContent = `${ev.byName}님이 ${ev.updated ? new Date(ev.updated).toLocaleDateString('ko-KR') : ''} 저장`;
+  let who = [...(e.who || [])];
+  const drawWho = () => {
+    $('#f-who').innerHTML = DB.members.map(m => {
+      const on = who.includes(m.id);
+      return `<span class="chip pick ${on ? '' : 'off'}" role="button" tabindex="0" data-id="${m.id}"
+        style="${on ? `border-color:${esc(m.color)}` : ''}"><i style="background:${esc(m.color)}"></i>${esc(m.name)}</span>`;
+    }).join('');
+  };
+  $('#f-who').onclick = ev2 => {
+    const c = ev2.target.closest('[data-id]'); if (!c) return;
+    const id2 = c.dataset.id;
+    who = who.includes(id2) ? who.filter(x => x !== id2) : [...who, id2];
+    drawWho();
+  };
+  $('#f-who').onkeydown = ev2 => { if (ev2.key === 'Enter'){ ev2.preventDefault(); ev2.target.click(); } };
+  const sync = () => {
+    d.querySelectorAll('.time').forEach(x => x.hidden = $('#f-allDay').checked);
+    $('#f-untilBox').style.visibility = $('#f-repeat').value === 'none' ? 'hidden' : 'visible';
+  };
+  // 시작 날짜를 옮기면 끝 날짜도 같은 간격으로 따라감
+  let prevDate = $('#f-date').value;
+  $('#f-date').onchange = () => {
+    const nd = $('#f-date').value; if (!nd) return;
+    const endV = $('#f-end').value;
+    if (prevDate && endV) $('#f-end').value = ds(dn(nd) + Math.max(0, dn(endV) - dn(prevDate)));
+    prevDate = nd;
+  };
+  $('#f-start').onchange = () => {
+    const st = $('#f-start').value, et = $('#f-endTime').value;
+    if (st && (!et || et <= st) && $('#f-end').value === $('#f-date').value){
+      const [h, mi] = st.split(':').map(Number); $('#f-endTime').value = `${pad(Math.min(23, h + 1))}:${pad(mi)}`;
+    }
+  };
+  $('#f-allDay').onchange = sync; $('#f-repeat').onchange = sync;
+  drawWho(); sync();
+  const close = () => d.remove();
+  $('#f-cancel').onclick = close;
+  d.onclick = x => { if (x.target === d) close(); };
+  if (ev) $('#f-del').onclick = () => deleteFlow(ev, occDate, close);
+  $('#evForm').onsubmit = async x => {
+    x.preventDefault();
+    const allDay = $('#f-allDay').checked;
+    const rec = {
+      id: ev?.id || uid('e'),
+      title: $('#f-title').value.trim(),
+      date: $('#f-date').value,
+      end: $('#f-end').value && $('#f-end').value !== $('#f-date').value ? $('#f-end').value : '',
+      allDay,
+      start: allDay ? '' : $('#f-start').value,
+      endTime: allDay ? '' : $('#f-endTime').value,
+      who: who.filter(memberById),
+      repeat: $('#f-repeat').value,
+      until: $('#f-repeat').value === 'none' ? '' : $('#f-until').value,
+      place: $('#f-place').value.trim(),
+      memo: $('#f-memo').value.trim(),
+      skip: ev?.skip || [],
+      byName: memberById(PREF.me)?.name || '',
+      updated: Date.now(),
+    };
+    if (!rec.title){ toast('제목을 입력해 주세요.'); return; }
+    if (!rec.date){ toast('시작 날짜를 골라 주세요.'); return; }
+    if (rec.end && rec.end < rec.date){ toast('끝 날짜가 시작 날짜보다 빠릅니다.'); return; }
+    if (!rec.end && !allDay && rec.start && rec.endTime && rec.endTime < rec.start){ toast('끝 시각이 시작 시각보다 빠릅니다.'); return; }
+    if (rec.until && rec.until < rec.date){ toast('반복 끝나는 날이 시작 날짜보다 빠릅니다.'); return; }
+    if (!allDay && !rec.start) rec.allDay = true;
+    if (await commitEvent(rec)){
+      close();
+      toast(ev ? '수정했습니다.' : '일정을 추가했습니다.');
+      if (!ev) pickDay(rec.date);
+    }
+  };
+  if (!ev) $('#f-title').focus();
+}
+async function deleteFlow(ev, occDate, close){
+  const recurring = ev.repeat && ev.repeat !== 'none';
+  const choice = await choose(recurring ? `"${ev.title}"은(는) ${REPEAT[ev.repeat]} 반복 일정입니다.` : `"${ev.title}" 일정을 삭제할까요?`,
+    recurring ? [['all', '반복 일정 전체 삭제'], ['one', `${fmtDay(occDate)}만 삭제`]] : [['all', '삭제']]);
+  if (!choice) return;
+  const ok = choice === 'one'
+    ? await commitEvent({ ...ev, skip: [...new Set([...(ev.skip || []), occDate])], updated: Date.now() })
+    : await removeEvent(ev.id);
+  if (ok){ close(); toast('삭제했습니다.'); }
+}
+
+/* ===================== 할 일 ===================== */
+let TODO_WHO = '';
+function renderTodo(){
+  const opts = `<option value="">담당 없음</option>` + DB.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  const sel = document.getElementById('todoWho'), keep = sel.value || PREF.me || '';
+  sel.innerHTML = opts; sel.value = memberById(keep) ? keep : '';
+  document.getElementById('todoFilter').innerHTML = [['', '모두'], ...DB.members.map(m => [m.id, m.name, m.color])]
+    .map(([id, name, c]) => `<span class="chip ${TODO_WHO === id ? 'pick' : ''}" style="${TODO_WHO === id ? 'border-color:var(--accent)' : ''}" role="button" tabindex="0"
+      onclick="TODO_WHO='${id}';renderTodo()" onkeydown="if(event.key==='Enter'){TODO_WHO='${id}';renderTodo()}">${c ? `<i style="background:${esc(c)}"></i>` : ''}${esc(name)}</span>`).join('');
+  const list = DB.todos.filter(t => !TODO_WHO || t.who === TODO_WHO);
+  const today = todayStr();
+  const sortKey = t => (t.due || '9999') + (t.created || 0);
+  const open = list.filter(t => !t.done).sort((a, b) => sortKey(a) < sortKey(b) ? -1 : 1);
+  const done = list.filter(t => t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  const row = t => {
+    const m = memberById(t.who);
+    const due = t.due ? `<span class="due ${!t.done && t.due < today ? 'late' : ''}">${t.due === today ? '오늘까지' : fmtDay(t.due) + '까지'}</span>` : '';
+    return `<div class="todo ${t.done ? 'done' : ''}"><input type="checkbox" ${t.done ? 'checked' : ''} aria-label="완료" onchange="toggleTodo('${t.id}', this.checked)">
+      <div class="b"><div class="txt">${esc(t.text)}</div><div class="meta muted" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:2px">
+      ${m ? `<span class="pill"><i style="background:${esc(m.color)}"></i>${esc(m.name)}</span>` : ''}${due}</div></div>
+      <button class="x" onclick="deleteTodo('${t.id}')" aria-label="삭제">×</button></div>`;
+  };
+  document.getElementById('todoOpen').innerHTML = open.length ? open.map(row).join('') : `<div class="muted" style="text-align:center;padding:8px">남은 할 일이 없습니다.</div>`;
+  document.getElementById('todoDone').innerHTML = done.map(row).join('');
+  document.getElementById('todoDoneBox').hidden = !done.length;
+  document.getElementById('todoDoneSum').textContent = `완료 ${done.length}개`;
+}
+async function addTodo(){
+  const box = document.getElementById('todoText');
+  const text = box.value.trim();
+  if (!text){ box.focus(); return; }
+  const t = { id: uid('t'), text, who: document.getElementById('todoWho').value, due: document.getElementById('todoDue').value, done: false, created: Date.now() };
+  if (await commitTodo(t)){ box.value = ''; document.getElementById('todoDue').value = ''; box.focus(); }
+}
+function toggleTodo(id, done){
+  const t = DB.todos.find(x => x.id === id); if (!t) return;
+  commitTodo({ ...t, done, doneAt: done ? Date.now() : 0 });
+}
+function deleteTodo(id){ removeTodo([id]); }
+async function clearDone(){
+  const ids = DB.todos.filter(t => t.done && (!TODO_WHO || t.who === TODO_WHO)).map(t => t.id);
+  if (!ids.length) return;
+  if (await choose(`완료한 할 일 ${ids.length}개를 지울까요?`, [['ok', '지우기']])) removeTodo(ids);
+}
+
+/* ===================== 설정: 구성원 ===================== */
+let MEM_DRAFT = null;
+function renderMembers(){
+  MEM_DRAFT = DB.members.map(m => ({ ...m }));
+  drawMemDraft();
+  const sel = document.getElementById('meSel');
+  sel.innerHTML = `<option value="">선택 안 함</option>` + DB.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  sel.value = memberById(PREF.me) ? PREF.me : '';
+  document.getElementById('optHol').checked = PREF.hol;
+}
+function drawMemDraft(){
+  document.getElementById('memList').innerHTML = MEM_DRAFT.map((m, i) => `<div class="mem">
+    <input type="color" id="mc-${m.id}" value="${esc(m.color)}" aria-label="${esc(m.name)} 색" onchange="MEM_DRAFT[${i}].color=this.value">
+    <input type="text" id="mn-${m.id}" value="${esc(m.name)}" maxlength="12" aria-label="이름" oninput="MEM_DRAFT[${i}].name=this.value">
+    <button class="danger" onclick="MEM_DRAFT.splice(${i},1);drawMemDraft()" aria-label="${esc(m.name)} 빼기">빼기</button></div>`).join('')
+    || '<div class="muted">구성원이 없습니다. 아래에서 추가하세요.</div>';
+}
+function addMember(){
+  const box = document.getElementById('newMem');
+  const name = box.value.trim(); if (!name) return;
+  const used = new Set(MEM_DRAFT.map(m => m.color));
+  MEM_DRAFT.push({ id: uid('m'), name, color: COLORS.find(c => !used.has(c)) || COLORS[MEM_DRAFT.length % COLORS.length] });
+  box.value = ''; drawMemDraft();
+  toast('추가했습니다. "구성원 저장"을 눌러야 반영됩니다.');
+}
+async function saveMembers(){
+  const list = MEM_DRAFT.map(m => ({ ...m, name: m.name.trim() })).filter(m => m.name);
+  if (await commitMembers(list)) toast('구성원을 저장했습니다.');
+}
+function setMe(id){ PREF.me = id; savePref(); renderTodo(); }
+function setOpt(k, v){ PREF[k] = v; savePref(); renderAll(); }
+
+/* ===================== 백업 / 복원 ===================== */
+function exportJSON(){
+  const box = document.getElementById('backupBox');
+  box.value = JSON.stringify({ app: 'family-calendar', version: 1, exported: new Date().toISOString(), ...DB }, null, 1);
+  box.hidden = false; box.select();
+  toast('백업 내용을 모두 복사해 메모장 등에 붙여넣어 .json 파일로 저장하세요.');
+}
+async function importJSON(input){
+  const f = input.files[0]; input.value = '';
+  if (!f) return;
+  let d;
+  try { d = JSON.parse(await f.text()); } catch(e){ toast('백업 파일을 읽지 못했습니다. 이 달력에서 만든 .json 파일인지 확인해 주세요.'); return; }
+  if (!Array.isArray(d.events)){ toast('일정 데이터가 없는 파일입니다.'); return; }
+  if (!await choose(`일정 ${d.events.length}개, 할 일 ${(d.todos || []).length}개를 불러옵니다. 같은 일정은 덮어쓰고, 지금 있는 다른 일정은 그대로 둡니다.`, [['ok', '불러오기']])) return;
+  if (Array.isArray(d.members) && d.members.length){
+    const ids = new Set(DB.members.map(m => m.id));
+    await commitMembers([...DB.members, ...d.members.filter(m => !ids.has(m.id))]);
+  }
+  await bulkWrite(d.events, d.todos || []);
+  toast('불러왔습니다.');
+}
+
+/* ===================== 알림 / 확인창 (페이지 내장) ===================== */
+let toastTimer;
+function toast(msg){
+  let t = document.getElementById('toast');
+  if (!t){ t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 3200);
+}
+// 선택지 [값, 글자] 중 하나를 고르면 그 값, 취소하면 null
+function choose(msg, options){
+  return new Promise(res => {
+    const d = document.createElement('div'); d.className = 'dlg';
+    d.innerHTML = `<div class="box"><div></div><div class="row" style="margin-top:14px;justify-content:flex-end"><button>취소</button></div></div>`;
+    d.querySelector('.box > div').textContent = msg;
+    const row = d.querySelector('.row');
+    const done = v => { d.remove(); res(v); };
+    row.firstElementChild.onclick = () => done(null);
+    options.forEach(([v, label], i) => {
+      const b = document.createElement('button'); b.textContent = label;
+      b.className = i === options.length - 1 ? 'primary' : 'danger';
+      b.onclick = () => done(v); row.appendChild(b);
+    });
+    d.onclick = e => { if (e.target === d) done(null); };
+    document.body.appendChild(d); row.lastElementChild.focus();
+  });
+}
+
+/* ===================== 공유 저장소 (가족 실시간 공유, 무료 Firebase) =====================
+ * 공유를 연결하지 않으면 이 기기 브라우저(localStorage)에만 저장됩니다.
+ * 연결하면 Firestore에 저장되고, 같은 공유 링크로 연 모든 기기에 실시간 반영됩니다.
+ * 가계부와 같은 보안 규칙을 쓰도록 같은 'households' 아래에 달력 코드로 만듭니다.
+ * 구조: households/<달력코드>/events/<id>, todos/<id>, settings/calendar = { members } */
+const SHARE_KEY = 'familyCalendar.share';
+const LEDGER_SHARE_KEY = 'householdLedger.share';
+const FB_VER = '10.14.1';
+const S = { db: null };
+let writeChain = Promise.resolve();
+const queued = fn => (writeChain = writeChain.then(fn, fn));
+
+function setSync(state, text){
+  const el = document.getElementById('sync');
+  el.className = 'sync ' + state; el.lastElementChild.textContent = text;
+}
+const readJSON = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const getShare = () => readJSON(SHARE_KEY);
+function loadScript(src){
+  return new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src;
+    s.onload = res; s.onerror = () => rej(new Error('불러오기 실패: ' + src));
+    document.head.appendChild(s);
+  });
+}
+// 공유 링크 문자열에서 연결 정보를 꺼내 저장. 성공하면 true
+function joinFromText(text){
+  const m = String(text).match(/#join=([A-Za-z0-9_-]+)/);
+  if (!m) return false;
+  try {
+    const j = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
+    if (!(j?.c?.apiKey && j?.c?.projectId && j?.h)) return false;
+    localStorage.setItem(SHARE_KEY, JSON.stringify({ config: j.c, hid: j.h }));
+    return true;
+  } catch(e){ return false; }
+}
+function takeJoinLink(){
+  if (!/^#join=/.test(location.hash)) return;
+  if (!joinFromText(location.hash)) toast('공유 링크가 올바르지 않습니다. 링크 전체를 다시 복사해 주세요.');
+  history.replaceState(null, '', location.pathname + location.search);
+}
+function joinPasted(){
+  const v = document.getElementById('joinLink').value.trim();
+  if (!joinFromText(v)){ toast('공유 링크를 찾지 못했습니다. "공유 링크 복사"로 복사한 주소 전체를 붙여넣어 주세요.'); return; }
+  location.reload();
+}
+const isHomeApp = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+function shareLink(){
+  const sh = getShare(); if (!sh) return '';
+  const b = btoa(unescape(encodeURIComponent(JSON.stringify({ c: sh.config, h: sh.hid })))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return location.origin + location.pathname + '#join=' + b;
+}
+async function initShared(){
+  takeJoinLink();
+  const sh = getShare();
+  renderShareBox();
+  if (!sh) return;
+  setSync('', '공유 달력 연결 중…');
+  try {
+    if (!window.firebase?.firestore){
+      await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app-compat.js`);
+      await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-auth-compat.js`);
+      await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore-compat.js`);
+    }
+    const app = firebase.apps.find(a => a.name === 'calendar') || firebase.initializeApp(sh.config, 'calendar');
+    await app.auth().signInAnonymously();
+    S.db = app.firestore().collection('households').doc(sh.hid);
+  } catch(e){
+    console.error(e);
+    S.db = null;
+    setSync('err', e?.code === 'auth/operation-not-allowed' || e?.code === 'auth/admin-restricted-operation'
+      ? 'Firebase에서 익명 로그인을 켜 주세요' : '공유 연결 실패 · 이 기기에만 저장 중');
+    return;
+  }
+  DB.events = []; DB.todos = [];
+  document.getElementById('backupNote').textContent = '공유 달력은 Firebase에 저장되어 공유 링크로 연 모든 기기에 실시간 반영됩니다. 백업은 만일을 위한 사본입니다.';
+  renderAll();
+  const fail = e => { console.error(e); setSync('err', e?.code === 'permission-denied' ? 'Firestore 보안 규칙을 확인해 주세요' : '공유 연결이 끊겼습니다. 새로고침해 주세요.'); };
+  let firstMembers = true;
+  S.db.collection('events').onSnapshot(snap => {
+    DB.events = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    setSync('on', snap.metadata.fromCache ? '공유 달력 · 오프라인' : '실시간 공유 중');
+    renderCal(); renderList(); renderMigrate();
+  }, fail);
+  S.db.collection('todos').onSnapshot(snap => {
+    DB.todos = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    renderTodo(); renderMigrate();
+  }, () => {});
+  S.db.collection('settings').doc('calendar').onSnapshot(s => {
+    if (s.exists && Array.isArray(s.data().members) && s.data().members.length) DB.members = s.data().members;
+    else if (firstMembers && !s.metadata.fromCache){
+      // 새 공유 달력: 이 기기의 구성원으로 시작
+      DB.members = load().members;
+      queued(() => S.db.collection('settings').doc('calendar').set({ members: clean(DB.members) })).catch(() => {});
+    }
+    firstMembers = false;
+    renderAll();
+  }, () => {});
+}
+const errMsg = e => e?.code === 'permission-denied' ? '저장 권한이 없습니다. Firestore 보안 규칙을 확인해 주세요.'
+  : e?.code === 'resource-exhausted' ? 'Firebase 무료 사용량을 넘었습니다. 내일 다시 시도해 주세요.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+const clean = o => JSON.parse(JSON.stringify(o));
+const stripId = ({ id, ...r }) => clean(r);
+
+// 저장/삭제의 단일 진입점들
+async function commitEvent(ev){
+  if (!S.db){ DB.events = DB.events.filter(e => e.id !== ev.id).concat(ev); persist(); renderAll(); return true; }
+  try { await queued(() => S.db.collection('events').doc(ev.id).set(stripId(ev))); return true; }
+  catch(e){ toast(errMsg(e)); return false; }
+}
+async function removeEvent(id){
+  if (!S.db){ DB.events = DB.events.filter(e => e.id !== id); persist(); renderAll(); return true; }
+  try { await queued(() => S.db.collection('events').doc(id).delete()); return true; }
+  catch(e){ toast(errMsg(e)); return false; }
+}
+async function commitTodo(t){
+  if (!S.db){ DB.todos = DB.todos.filter(x => x.id !== t.id).concat(t); persist(); renderTodo(); return true; }
+  try { await queued(() => S.db.collection('todos').doc(t.id).set(stripId(t))); return true; }
+  catch(e){ toast(errMsg(e)); return false; }
+}
+async function removeTodo(ids){
+  if (!S.db){ DB.todos = DB.todos.filter(t => !ids.includes(t.id)); persist(); renderTodo(); return true; }
+  try { await queued(async () => { const b = S.db.firestore.batch(); ids.forEach(id => b.delete(S.db.collection('todos').doc(id))); await b.commit(); }); return true; }
+  catch(e){ toast(errMsg(e)); return false; }
+}
+async function commitMembers(list){
+  if (!S.db){ DB.members = list; persist(); renderAll(); return true; }
+  try { await queued(() => S.db.collection('settings').doc('calendar').set({ members: clean(list) })); return true; }
+  catch(e){ toast(errMsg(e)); return false; }
+}
+// 여러 건 한꺼번에 (복원, 이 기기 데이터 옮기기). Firestore 묶음 쓰기는 400건씩
+async function bulkWrite(events, todos){
+  if (!S.db){
+    const ei = new Set(events.map(e => e.id)), ti = new Set(todos.map(t => t.id));
+    DB.events = DB.events.filter(e => !ei.has(e.id)).concat(events);
+    DB.todos = DB.todos.filter(t => !ti.has(t.id)).concat(todos);
+    persist(); renderAll(); return true;
+  }
+  const ops = [...events.map(e => ['events', e]), ...todos.map(t => ['todos', t])];
+  try {
+    await queued(async () => {
+      for (let i = 0; i < ops.length; i += 400){
+        const b = S.db.firestore.batch();
+        ops.slice(i, i + 400).forEach(([col, r]) => b.set(S.db.collection(col).doc(r.id), stripId(r)));
+        await b.commit();
+      }
+    });
+    return true;
+  } catch(e){ toast(errMsg(e)); return false; }
+}
+
+/* ----- 공유 설정 화면 ----- */
+function parseFirebaseConfig(text){
+  const cfg = {};
+  for (const m of String(text).matchAll(/["']?(\w+)["']?\s*:\s*["']([^"']+)["']/g)) cfg[m[1]] = m[2];
+  return cfg.apiKey && cfg.projectId ? cfg : null;
+}
+function randomCode(){
+  const a = new Uint8Array(18); crypto.getRandomValues(a);
+  return Array.from(a, b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+}
+function renderShareBox(){
+  const sh = getShare();
+  document.getElementById('homeAppNote').hidden = !!sh || !isHomeApp();
+  document.getElementById('shareOff').hidden = !!sh;
+  document.getElementById('shareOn').hidden = !sh;
+  document.getElementById('reuseLedger').hidden = !!sh || !readJSON(LEDGER_SHARE_KEY)?.config?.apiKey;
+  if (sh){
+    document.getElementById('shareProject').textContent = sh.config.projectId;
+    document.getElementById('shareLinkBox').value = shareLink();
+  }
+}
+function connectShare(){
+  const cfg = parseFirebaseConfig(document.getElementById('fbConfig').value);
+  if (!cfg){ toast('설정값에서 apiKey와 projectId를 찾지 못했습니다. Firebase 콘솔의 firebaseConfig 전체를 붙여넣어 주세요.'); return; }
+  localStorage.setItem(SHARE_KEY, JSON.stringify({ config: cfg, hid: randomCode() }));
+  location.reload();
+}
+function reuseLedgerFirebase(){
+  const cfg = readJSON(LEDGER_SHARE_KEY)?.config;
+  if (!cfg) return;
+  localStorage.setItem(SHARE_KEY, JSON.stringify({ config: cfg, hid: randomCode() }));
+  location.reload();
+}
+async function copyShareLink(){
+  const box = document.getElementById('shareLinkBox');
+  try { await navigator.clipboard.writeText(box.value); toast('공유 링크를 복사했습니다. 카카오톡 등으로 가족에게 보내세요.'); }
+  catch(e){ box.select(); toast('링크를 길게 눌러 복사해 주세요.'); }
+}
+async function disconnectShare(){
+  if (!await choose('이 기기에서 공유 달력 연결을 끊을까요?\n공유된 일정은 지워지지 않으며, 공유 링크로 다시 연결할 수 있습니다.', [['ok', '연결 끊기']])) return;
+  localStorage.removeItem(SHARE_KEY);
+  location.reload();
+}
+// 공유 연결 전에 이 기기에만 저장했던 일정을 공유 달력으로 옮기기
+function localOnly(){
+  const d = readJSON(KEY) || {};
+  const ev = new Set(DB.events.map(e => e.id)), td = new Set(DB.todos.map(t => t.id));
+  return { events: (d.events || []).filter(e => !ev.has(e.id)), todos: (d.todos || []).filter(t => !td.has(t.id)) };
+}
+function renderMigrate(){
+  const box = document.getElementById('migrate');
+  const l = S.db ? localOnly() : { events: [], todos: [] };
+  const n = l.events.length + l.todos.length;
+  box.hidden = !n;
+  box.querySelector('span').textContent = `이 기기에만 저장된 일정 ${l.events.length}개, 할 일 ${l.todos.length}개가 있습니다.`;
+}
+async function uploadLocal(){
+  const l = localOnly();
+  if (await bulkWrite(l.events, l.todos)) toast('공유 달력으로 옮겼습니다.');
+}
+
+/* ===================== 시작 ===================== */
+function tab(v){
+  document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.getElementById('fab').hidden = v === 'todo' || v === 'set';
+  if (v === 'list') renderList();
+  try { sessionStorage.setItem('familyCalendar.tab', v); } catch(e){}
+  scrollTo(0, 0);
+}
+function renderAll(){ renderCal(); renderList(); renderTodo(); renderMembers(); }
+renderAll();
+try { const v = sessionStorage.getItem('familyCalendar.tab'); if (v && document.getElementById('v-' + v)) tab(v); } catch(e){}
+initShared();
+// 자정이 지나면 '오늘' 갱신, 다른 탭에서 돌아오면 다시 그림
+let lastToday = todayStr();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && todayStr() !== lastToday){ lastToday = todayStr(); renderCal(); renderList(); renderTodo(); }
+});
+matchMedia('(max-width:480px)').addEventListener?.('change', renderCal);
+</script>
+</body>
+</html>

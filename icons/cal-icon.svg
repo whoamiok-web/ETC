@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- 배경 (iOS가 모서리를 둥글게 잘라줌) -->
+  <rect width="1024" height="1024" fill="#2f7a5f"/>
+  <!-- 달력 종이 -->
+  <rect x="200" y="250" width="624" height="590" rx="70" fill="#ffffff"/>
+  <path d="M200 320 Q200 250 270 250 L754 250 Q824 250 824 320 L824 420 L200 420 Z" fill="#e0607e"/>
+  <!-- 고리 -->
+  <rect x="330" y="180" width="56" height="150" rx="28" fill="#ffffff" stroke="#2f7a5f" stroke-width="18"/>
+  <rect x="638" y="180" width="56" height="150" rx="28" fill="#ffffff" stroke="#2f7a5f" stroke-width="18"/>
+  <!-- 가족 점 -->
+  <circle cx="340" cy="540" r="44" fill="#e0607e"/>
+  <circle cx="512" cy="540" r="44" fill="#3f7fd6"/>
+  <circle cx="684" cy="540" r="44" fill="#e08a2e"/>
+  <circle cx="340" cy="700" r="44" fill="#2f9e6e"/>
+  <circle cx="512" cy="700" r="44" fill="#d9e2de"/>
+  <circle cx="684" cy="700" r="44" fill="#d9e2de"/>
+</svg>
