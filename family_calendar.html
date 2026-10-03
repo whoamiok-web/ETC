@@ -102,9 +102,10 @@ details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
   font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;cursor:pointer;pointer-events:auto;}
 .ch i{flex:none;width:14px;height:14px;border-radius:50%;background:var(--c);}
 .ch span{overflow:hidden;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 8px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 8px),transparent);}
-/* 공휴일: 가족 색과 헷갈리지 않게 바탕·점 없이 빨간 글씨 */
-.ch.hol{--c:var(--hol);background:transparent;color:var(--hol);padding-left:5px;}
+/* 공휴일: 연한 빨강 바탕에 진한 빨강 글씨, 점 없음 (가족 일정과 구분) */
+.ch.hol{--c:var(--hol);color:color-mix(in srgb,var(--hol) 62%,var(--ink));padding:0 8px;}
 .ch.hol i{display:none;}
+.num.hol{color:var(--hol);}
 .ch.cl{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0;}
 .ch.cr{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0;}
 .more{font-size:11.5px;color:var(--sub);text-align:center;font-weight:600;line-height:16px;}
@@ -526,7 +527,8 @@ function weekHTML(ws, first, last, occ, today){
     const d = ws + c;
     if (d < first || d > last) continue;
     const s = ds(d);
-    h += `<div class="num ${c === 0 || c === 6 ? 'we' : ''} ${d === today ? 'today' : ''}" style="grid-column:${c + 1}"><b>${+s.slice(8,10)}</b></div>`;
+    const hol = PREF.hol && HOLIDAYS[s];
+    h += `<div class="num ${hol ? 'hol' : c === 0 || c === 6 ? 'we' : ''} ${d === today ? 'today' : ''}" style="grid-column:${c + 1}"><b>${+s.slice(8,10)}</b></div>`;
     hits += `<button class="hit" style="grid-column:${c + 1}" onclick="dayTap('${s}')" aria-label="${fmtDay(s)}"></button>`;
     if (hidden[d]) h += `<div class="more" style="grid-column:${c + 1};grid-row:${MAXL + 2}">+${hidden[d]}개</div>`;
   }
