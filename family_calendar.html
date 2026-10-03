@@ -167,6 +167,8 @@ details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
 .check{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink);}
 .check input{width:18px;height:18px;accent-color:var(--today);}
 
+.newb{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--tbh) + env(safe-area-inset-top,0px) + 42px);z-index:21;
+  border:0;border-radius:999px;padding:9px 18px;background:var(--today);color:#fff;font-size:14px;font-weight:800;box-shadow:var(--shadow);}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:#222e;color:#fff;
   padding:10px 16px;border-radius:12px;font-size:13px;z-index:60;max-width:calc(100% - 32px);}
 
@@ -196,6 +198,7 @@ details summary{cursor:pointer;font-size:13px;color:var(--sub);margin-top:8px;}
 <section class="view on" id="v-cal">
   <div class="dowbar" id="dowbar"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
   <div id="topSent"></div>
+  <button class="newb" id="newBanner" hidden onclick="openNew()"></button>
   <div id="months"></div>
   <div id="botSent" style="height:1px"></div>
 </section>
@@ -317,6 +320,33 @@ service cloud.firestore {
     </div>
   </div>
 
+  <h2>알림</h2>
+  <div class="card" id="notifOff">
+    <div style="font-size:13.5px;line-height:1.7">위의 <b>가족과 공유</b>를 연결하면, 가족이 새 일정을 등록할 때 알림을 받을 수 있습니다.</div>
+  </div>
+  <div id="notifOn" hidden>
+    <div class="card">
+      <div style="font-size:14px;font-weight:800">앱이 닫혀 있어도 휴대폰으로 알림 받기</div>
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="ntfyOn" onchange="toggleNtfy(this.checked)"> 가족이 새 일정을 등록하면 휴대폰 알림 보내기</label>
+      <div id="ntfyBox" hidden>
+        <ol style="font-size:13px;line-height:1.75;padding-left:20px;margin:10px 0">
+          <li>휴대폰에 무료 앱 <b>ntfy</b>를 설치합니다. (App Store · Play 스토어에서 "ntfy" 검색)</li>
+          <li>ntfy 앱에서 <b>＋</b> (Subscribe to topic)를 누르고, 아래 <b>주제 이름</b>을 붙여넣은 뒤 <b>Subscribe</b>를 누릅니다. 서버는 기본값(ntfy.sh) 그대로 두세요.</li>
+          <li>가족 모두 같은 주제를 구독하면 끝입니다.</li>
+        </ol>
+        <div class="row"><input id="ntfyTopic" readonly style="flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px" onclick="this.select()">
+          <button onclick="copyTopic()">복사</button></div>
+        <div class="muted" style="margin-top:8px;line-height:1.6">알림은 무료 공개 서버 ntfy.sh를 거쳐 전달됩니다. 주제 이름을 아는 사람은 알림 내용(일정 제목·날짜)을 볼 수 있으니 가족끼리만 공유하세요. 일정을 등록한 사람의 휴대폰에도 같은 알림이 옵니다.</div>
+        <div class="row" style="margin-top:10px"><span class="sp"></span><button onclick="testPush()">테스트 알림 보내기</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:800">앱을 열어 둔 동안 알림</div>
+      <div class="muted" style="margin-top:6px;line-height:1.6">가족이 일정을 등록하면 화면 위에 <b>새 일정</b>이 표시됩니다. 다른 앱을 보는 동안에도 알림 창에 띄우려면 허용해 주세요. 아이폰은 홈 화면에 추가한 앱에서만 됩니다.</div>
+      <div class="row" style="margin-top:10px"><span id="permState" class="muted"></span><span class="sp"></span><button id="permBtn" onclick="askPerm()">알림 허용</button></div>
+    </div>
+  </div>
+
   <h2>표시</h2>
   <div class="card">
     <label class="check"><input type="checkbox" id="optHol" onchange="setOpt('hol', this.checked)"> 공휴일 표시 (2025~2027년)</label>
@@ -409,6 +439,8 @@ function persist(){
 }
 let PREF = (() => { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch(e){ return {}; } })();
 PREF.hidden ||= []; PREF.hol ??= true;
+PREF.dev ||= randomCode();            // 이 기기 표시 (내가 등록한 일정 구분)
+PREF.lastSeen ??= Date.now();         // 새 일정 확인 시각
 function savePref(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(PREF)); } catch(e){} }
 const memberById = id => DB.members.find(m => m.id === id);
 const evColor = ev => memberById(ev.who?.[0])?.color || FAMILY_COLOR;
@@ -779,6 +811,9 @@ function openEditor(id, dateStr){
       memo: $('#f-memo').value.trim(),
       skip: ev?.skip || [],
       byName: memberById(PREF.me)?.name || '',
+      by: PREF.me || '',
+      dev: ev?.dev || PREF.dev,
+      created: ev?.created || Date.now(),
       updated: Date.now(),
     };
     if (!rec.title){ toast('제목을 입력해 주세요.'); return; }
@@ -788,6 +823,7 @@ function openEditor(id, dateStr){
     if (rec.until && rec.until < rec.date){ toast('반복 끝나는 날이 시작 날짜보다 빠릅니다.'); return; }
     if (!allDay && !rec.start) rec.allDay = true;
     if (await commitEvent(rec)){
+      if (!ev) pushNewEvent(rec);
       close();
       toast(ev ? '수정했습니다.' : '일정을 추가했습니다.');
       if (!ev) SEL = rec.date;
@@ -860,6 +896,7 @@ function renderMembers(){
   sel.innerHTML = `<option value="">선택 안 함</option>` + DB.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
   sel.value = memberById(PREF.me) ? PREF.me : '';
   document.getElementById('optHol').checked = PREF.hol;
+  renderNotif();
 }
 function drawMemDraft(){
   document.getElementById('memList').innerHTML = MEM_DRAFT.map((m, i) => `<div class="mem">
@@ -1012,8 +1049,16 @@ async function initShared(){
   renderAll();
   const fail = e => { console.error(e); setSync('err', e?.code === 'permission-denied' ? 'Firestore 보안 규칙을 확인해 주세요' : '공유 연결이 끊겼습니다. 새로고침해 주세요.'); };
   let firstMembers = true;
+  let firstEvents = true;
   S.db.collection('events').onSnapshot(snap => {
     DB.events = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    if (!firstEvents) snap.docChanges().forEach(c => {
+      if (c.type !== 'added' || c.doc.metadata.hasPendingWrites) return;
+      const ev = { ...c.doc.data(), id: c.doc.id };
+      if (!isMine(ev) && ev.created > Date.now() - 10 * 60e3) familyAdded(ev);
+    });
+    firstEvents = false;
+    renderNewBanner();
     setSync('on', snap.metadata.fromCache ? '공유 달력 · 오프라인' : '실시간 공유 중');
     renderCal(); renderList(); renderMigrate();
   }, fail);
@@ -1022,14 +1067,15 @@ async function initShared(){
     renderTodo(); renderMigrate();
   }, () => {});
   S.db.collection('settings').doc('calendar').onSnapshot(s => {
+    DB.ntfy = s.exists ? s.data().ntfy || null : null;
     if (s.exists && Array.isArray(s.data().members) && s.data().members.length) DB.members = s.data().members;
     else if (firstMembers && !s.metadata.fromCache){
       // 새 공유 달력: 이 기기의 구성원으로 시작
       DB.members = load().members;
-      queued(() => S.db.collection('settings').doc('calendar').set({ members: clean(DB.members) })).catch(() => {});
+      queued(() => S.db.collection('settings').doc('calendar').set({ members: clean(DB.members) }, { merge: true })).catch(() => {});
     }
     firstMembers = false;
-    renderAll();
+    renderAll(); renderNotif();
   }, () => {});
 }
 const errMsg = e => e?.code === 'permission-denied' ? '저장 권한이 없습니다. Firestore 보안 규칙을 확인해 주세요.'
@@ -1060,7 +1106,7 @@ async function removeTodo(ids){
 }
 async function commitMembers(list){
   if (!S.db){ DB.members = list; persist(); renderAll(); return true; }
-  try { await queued(() => S.db.collection('settings').doc('calendar').set({ members: clean(list) })); return true; }
+  try { await queued(() => S.db.collection('settings').doc('calendar').set({ members: clean(list) }, { merge: true })); return true; }
   catch(e){ toast(errMsg(e)); return false; }
 }
 // 여러 건 한꺼번에 (복원, 이 기기 데이터 옮기기). Firestore 묶음 쓰기는 400건씩
@@ -1145,6 +1191,101 @@ async function uploadLocal(){
   if (await bulkWrite(l.events, l.todos)) toast('공유 달력으로 옮겼습니다.');
 }
 
+
+/* ===================== 알림 =====================
+ * 1) 앱이 닫혀 있어도: 무료 ntfy 앱으로 휴대폰 알림. 일정을 등록한 기기가 ntfy.sh 로 바로 보냅니다 (서버 불필요).
+ *    주제 이름은 공유 설정(settings/calendar.ntfy)에 저장되어 가족 모두 같은 값을 씁니다.
+ * 2) 앱을 열어 둔 동안: 가족이 등록한 일정을 실시간으로 알려 주고, 지난번 확인 뒤 새로 생긴 일정을 모아 보여 줍니다. */
+const NTFY = 'https://ntfy.sh/';
+const isMine = e => e.dev === PREF.dev || (!!PREF.me && e.by === PREF.me);
+const appURL = () => location.origin + location.pathname;
+function pushText(ev){
+  return `${fmtDay(ev.date)}${ev.allDay || !ev.start ? '' : ' ' + fmtTime(ev.start)} · ${ev.title}`;
+}
+async function sendPush(title, message){
+  const n = DB.ntfy;
+  if (!S.db || !n?.on || !n.topic) return false;
+  try {
+    const r = await fetch(NTFY, { method: 'POST', body: JSON.stringify({ topic: n.topic, title, message, tags: ['calendar'], click: appURL() }) });
+    return r.ok;
+  } catch(e){ return false; }
+}
+function pushNewEvent(ev){
+  sendPush(`${ev.byName || '가족'}님이 일정을 추가했어요`, pushText(ev));
+}
+async function toggleNtfy(on){
+  const ntfy = { on, topic: DB.ntfy?.topic || 'family-cal-' + randomCode() };
+  try {
+    await queued(() => S.db.collection('settings').doc('calendar').set({ ntfy }, { merge: true }));
+    DB.ntfy = ntfy; renderNotif();
+    if (on) toast('켰습니다. 아래 순서대로 ntfy 앱에서 주제를 구독하세요.');
+  } catch(e){ toast(errMsg(e)); renderNotif(); }
+}
+async function copyTopic(){
+  const box = document.getElementById('ntfyTopic');
+  try { await navigator.clipboard.writeText(box.value); toast('주제 이름을 복사했습니다. ntfy 앱에 붙여넣으세요.'); }
+  catch(e){ box.select(); toast('주제 이름을 길게 눌러 복사해 주세요.'); }
+}
+async function testPush(){
+  const ok = await sendPush('우리 가족 달력', '테스트 알림입니다. 이 알림이 보이면 연결이 끝났습니다.');
+  toast(ok ? '보냈습니다. ntfy 앱에 알림이 왔는지 확인하세요.' : '보내지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.');
+}
+async function askPerm(){
+  if (!('Notification' in window)){ renderNotif(); return; }
+  try { await Notification.requestPermission(); } catch(e){}
+  renderNotif();
+}
+function renderNotif(){
+  document.getElementById('notifOff').hidden = !!S.db;
+  document.getElementById('notifOn').hidden = !S.db;
+  const on = !!DB.ntfy?.on;
+  document.getElementById('ntfyOn').checked = on;
+  document.getElementById('ntfyBox').hidden = !on;
+  document.getElementById('ntfyTopic').value = DB.ntfy?.topic || '';
+  const p = 'Notification' in window ? Notification.permission : 'none';
+  document.getElementById('permState').textContent = { granted: '알림 허용됨', denied: '알림이 꺼져 있습니다. 휴대폰 설정에서 이 앱의 알림을 켜 주세요.', default: '아직 허용하지 않음', none: isHomeApp() ? '이 기기는 알림 창을 지원하지 않습니다.' : '이 브라우저는 알림 창을 지원하지 않습니다. 아이폰은 홈 화면에 추가한 앱에서 열어 주세요.' }[p];
+  document.getElementById('permBtn').hidden = p !== 'default';
+}
+// 이 기기 알림 창에 띄우기 (앱이 백그라운드일 때)
+function showSystem(title, body, tag){
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const opts = { body, tag, icon: 'icons/cal-icon-192.png' };
+  const fallback = () => { try { new Notification(title, opts); } catch(e){} };
+  if (navigator.serviceWorker?.controller || SW_READY) navigator.serviceWorker.ready.then(r => r.showNotification(title, opts)).catch(fallback);
+  else fallback();
+}
+let SW_READY = false;
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('family_sw.js').then(() => SW_READY = true).catch(() => {});
+}
+// 가족이 방금 등록한 일정 (실시간)
+function familyAdded(ev){
+  const title = `${ev.byName || '가족'}님이 일정을 추가했어요`;
+  toast(`${title}: ${ev.title}`);
+  if (document.visibilityState !== 'visible') showSystem(title, pushText(ev), ev.id);
+  renderNewBanner();
+}
+// 지난번 확인 뒤 가족이 새로 등록한 일정
+const newEvents = () => S.db ? DB.events.filter(e => e.created > PREF.lastSeen && !isMine(e)).sort((a, b) => b.created - a.created) : [];
+function renderNewBanner(){
+  const n = newEvents().length, b = document.getElementById('newBanner');
+  b.hidden = !n || VIEWNAME !== 'cal';
+  b.textContent = `새 일정 ${n}개`;
+}
+function openNew(){
+  const list = newEvents();
+  const el = document.createElement('div'); el.className = 'dlg sheet';
+  el.innerHTML = `<div class="box"><div class="row"><b style="font-size:19px">가족이 새로 등록한 일정</b><span class="sp"></span>
+      <button class="ib" data-x aria-label="닫기">×</button></div>
+    <div class="agenda" style="margin-top:12px">${list.map(ev => {
+      const o = { ev, s: dn(ev.date), e: dn(ev.end || ev.date) };
+      return `<div class="muted" style="margin-top:6px">${esc(ev.byName || '가족')}님 · ${new Date(ev.created).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' })} 등록 · <b style="color:var(--ink)">${fmtDay(ev.date)}</b></div>${itemHTML(o, o.s)}`;
+    }).join('')}</div></div>`;
+  el.onclick = e => { if (e.target === el || e.target.closest('[data-x]')) el.remove(); };
+  document.body.appendChild(el);
+  PREF.lastSeen = Date.now(); savePref(); renderNewBanner();
+}
+
 /* ===================== 시작 ===================== */
 let VIEWNAME = 'cal';
 const SCROLL = {};
@@ -1158,6 +1299,7 @@ function tab(v){
   document.getElementById('leftLbl').textContent = VIEW_TITLE[v] || `${ymY(CUR)}년`;
   try { sessionStorage.setItem('familyCalendar.tab', v); } catch(e){}
   if (v === 'list') renderList();
+  renderNewBanner();
   if (v === 'cal'){
     if (SCROLL.cal === undefined) showMonth(CUR); else scrollTo(0, SCROLL.cal);
     renderCal();
@@ -1166,9 +1308,11 @@ function tab(v){
 function renderAll(){ renderCal(); renderList(); renderTodo(); renderMembers(); }
 document.querySelector('.bb [data-v="cal"]').classList.add('on');
 document.getElementById('leftLbl').textContent = `${ymY(CUR)}년`;
+try { history.scrollRestoration = 'manual'; } catch(e){}
 renderAll();
 showMonth(CUR);
-SCROLL.cal = scrollY;
+// 브라우저가 불러온 뒤 스크롤을 맨 위로 되돌리는 경우가 있어 한 번 더 이번 달로
+addEventListener('load', () => { if (VIEWNAME === 'cal' && scrollY < 50) showMonth(ymIdx(todayStr())); });
 try { const v = sessionStorage.getItem('familyCalendar.tab'); if (v && v !== 'cal' && document.getElementById('v-' + v)) tab(v); } catch(e){}
 initShared();
 // 자정이 지나면 '오늘' 갱신
