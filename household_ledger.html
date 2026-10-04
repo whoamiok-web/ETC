@@ -134,6 +134,10 @@ td.num,th.num{text-align:right;white-space:nowrap;}
 .cal .calsum .bud b{font-size:15px;color:var(--pos);}
 .cal .calsum .bud.over b{color:var(--neg);}
 .bars .b .rem{grid-column:2 / -1;font-size:11.5px;color:var(--sub);margin-top:-5px;display:flex;justify-content:space-between;}
+.bars.weekly .b{grid-template-columns:118px 1fr 92px;}
+.bars.weekly .b.now > span:first-child{color:var(--accent);font-weight:800;}
+.bars.weekly .b.now .tr i{background:var(--accent);}
+@media (max-width:520px){ .bars.weekly .b{grid-template-columns:104px 1fr 80px;} }
 .bars .b .rem.over{color:var(--neg);font-weight:700;}
 .cal .leg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin:8px 4px 0;}
 .daily{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;}
@@ -253,6 +257,8 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--sub);margin-top:10px
   <div class="card bars budget" id="budgetBars"></div>
   <h2>사용자별 지출</h2>
   <div class="card bars" id="userBars"></div>
+  <h2>주간 지출 <span class="muted" style="font-weight:400">(일~토)</span></h2>
+  <div class="card bars weekly" id="weekBars"></div>
   <h2>일별 지출</h2>
   <div class="card"><div class="daily" id="daily"></div><div class="axis" id="dailyAxis"></div></div>
   <h2>자주 쓴 가맹점 TOP 10</h2>
@@ -1143,6 +1149,21 @@ function renderStats(){
   const mid = dates[Math.floor(dates.length/2)];
   document.getElementById('daily').innerHTML = daily.map((v,i) => `<div class="${v?'':'z'}" style="height:${v?Math.max(3,v/dmax*100):1}%" title="${dates[i].getMonth()+1}/${dates[i].getDate()} ${won(v)}"></div>`).join('');
   document.getElementById('dailyAxis').innerHTML = `<span>${dates[0].getMonth()+1}/${dates[0].getDate()}</span><span>${mid.getMonth()+1}/${mid.getDate()}</span><span>${end.getMonth()+1}/${end.getDate()} · 최대 ${won(dmax===1?0:dmax)}</span>`;
+
+  // 주간 (일요일~토요일). 기간 경계에 걸친 주는 기간 안의 날만 더함
+  const weeks = [];
+  dates.forEach((d, i) => {
+    if (!weeks.length || d.getDay() === 0) weeks.push({ from: d, to: d, sum: 0, days: 0 });
+    const w = weeks[weeks.length-1]; w.to = d; w.sum += daily[i]; w.days++;
+  });
+  const todayKey = ymd(new Date()), wmax = Math.max(...weeks.map(w => w.sum), 1);
+  const f = d => `${d.getMonth()+1}/${d.getDate()}`;
+  document.getElementById('weekBars').innerHTML = weeks.map((w, i) => {
+    const now = todayKey >= ymd(w.from) && todayKey <= ymd(w.to);
+    return `<div class="b ${now?'now':''}"><span>${i+1}주 <span class="muted">${f(w.from)}~${f(w.to)}</span></span>
+      <div class="tr"><i style="width:${w.sum?Math.max(1,w.sum/wmax*100):0}%"></i></div><span class="n">${won(w.sum)}</span>
+      <span class="rem"><span>${now ? '이번 주' : w.days < 7 ? `${w.days}일만 포함` : ''}</span><span>${w.sum ? '하루 평균 ' + won(Math.round(w.sum/w.days)) : ''}</span></span></div>`;
+  }).join('');
 
   // 가맹점 TOP
   const top = group(t => t.merchant).slice(0,10);
