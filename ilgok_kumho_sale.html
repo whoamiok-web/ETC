@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>금호아파트 매도 시세</title>
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#1a2940; --sub:#6b7a8d; --line:#dde3ea;
+  --th:#37474f; --thbg:#f4f6f9; --neg:#c62828; --pos:#1b5e20; --warnbg:#fff8e1; --warnbd:#f9a825;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+    --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --warnbg:#2e2a1a; --warnbd:#c79a1e; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151b24; --card:#1f2733; --ink:#e6ecf3; --sub:#9aa8b8; --line:#2f3a48;
+  --th:#cfd8dc; --thbg:#26303d; --neg:#ef9a9a; --pos:#a5d6a7; --warnbg:#2e2a1a; --warnbd:#c79a1e; color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  padding:32px 24px 50px 24px;max-width:860px;}
+h1{font-size:22px;margin:0 0 6px;color:var(--ink);}
+.subtitle{font-size:13px;color:var(--sub);margin-bottom:28px;}
+h2{font-size:15px;margin:30px 0 10px;color:var(--ink);border-left:4px solid #1565c0;padding-left:8px;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
+.kpi{background:var(--card);border-radius:10px;padding:14px 16px;box-shadow:0 3px 10px #00000014;}
+.kpi .l{font-size:12px;color:var(--sub);}
+.kpi .v{font-size:19px;font-weight:800;margin-top:4px;}
+.kpi.neg .v{color:var(--neg);}
+.kpi.pos .v{color:var(--pos);}
+.tw{overflow-x:auto;background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:420px;}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);line-height:20px;}
+th{background:var(--thbg);color:var(--th);text-align:left;font-weight:700;}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+tr.sum td{font-weight:800;background:var(--thbg);}
+tr.sub td{color:var(--sub);}
+.neg{color:var(--neg);} .pos{color:var(--pos);}
+.svgwrap{background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;padding:12px;}
+.svgwrap svg{width:100%;max-width:440px;height:auto;display:block;}
+.check{background:var(--warnbg);border:1px solid var(--warnbd);border-radius:10px;padding:12px 16px;font-size:12.5px;line-height:22px;}
+.check p{margin:0 0 8px;} .check p:last-child{margin:0;}
+.legend{display:flex;gap:18px;margin-top:18px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub);}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.note{margin-top:12px;font-size:11.5px;color:#999;line-height:1.8;}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.nav a{font-size:12.5px;font-weight:700;text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);background:var(--card);}
+.nav a[aria-current]{background:#1565c0;border-color:#1565c0;color:#fff;}
+.nav a:hover{border-color:#1565c0;}
+.nav a:focus-visible,.xlink:focus-visible{outline:2px solid #1565c0;outline-offset:2px;}
+.xlink{color:#1565c0;font-weight:700;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .xlink{color:#90caf9;}}
+:root[data-theme="dark"] .xlink{color:#90caf9;}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;white-space:nowrap;}
+.tag.own{background:#fff8e1;color:#bf360c;} .tag.loan{background:#e3f2fd;color:#0d47a1;} .tag.due{background:#fce4ec;color:#880e4f;}
+tr.due td{background:#fce4ec33;}
+.chart svg{max-width:none;}
+.chart .grid{stroke:var(--line);stroke-width:1;}
+.chart .ax{font-size:11.5px;fill:var(--sub);font-family:"Malgun Gothic",sans-serif;}
+.chart .lb{font-size:11.5px;font-weight:700;fill:var(--ink);font-family:"Malgun Gothic",sans-serif;}
+.tag.me{background:#e3f2fd;color:#0d47a1;} .tag.can{background:#ffebee;color:#c62828;}
+.tag.dir{background:#fff3e0;color:#e65100;} .tag.low{background:#eceff1;color:#455a64;}
+tr.x td{color:var(--sub);}
+tr.hl td{background:#1565c014;font-weight:700;}
+.kpi .s{font-size:11.5px;color:var(--sub);margin-top:2px;}
+.kpi.main{background:#1a3a6b;} .kpi.main .l,.kpi.main .s{color:#90caf9;} .kpi.main .v{color:#fff;}
+.tx td{white-space:nowrap;} .tx td:last-child{white-space:normal;min-width:160px;}
+@media (max-width:500px){body{padding:20px 16px 40px;}}
+ul.pl{margin:0;padding-left:18px;font-size:12.5px;line-height:22px;}
+</style>
+</head>
+<body>
+
+<h1>일곡동 금호아파트 매도 시세 보고서</h1>
+<div class="subtitle">북구 일곡동 818-4 · 1996년 준공 · 전용 84.72㎡ · 매도 대상 103동 6층 · 2026년 매매 실거래 기준 · 작성기준일 2026.10.04</div>
+
+<div class="kpis">
+  <div class="kpi main"><div class="l">예상 시세 (103동 6층)</div><div class="v">약 2억 7,000만</div><div class="s">범위 2.65억 ~ 2.8억</div></div>
+  <div class="kpi"><div class="l">권장 호가</div><div class="v">2억 8,000~8,500만</div><div class="s">마무리 목표 2억 7,000~7,500만</div></div>
+  <div class="kpi"><div class="l">최근 3개월 일반 층 평균</div><div class="v">2억 7,300만</div><div class="s">7~9월, 4건</div></div>
+  <div class="kpi neg"><div class="l">자금계획 대비 (2.7억 매도 시)</div><div class="v">△1,000만</div><div class="s">계획 가정 매도가 2.8억</div></div>
+</div>
+
+<h2>1. 2026년 실거래 추이</h2>
+<div class="svgwrap chart" style="overflow-x:auto;">
+<svg viewBox="0 0 820 320" role="img" aria-label="2026년 금호아파트 매매 실거래가 분포" style="min-width:600px;">
+  <defs><filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/></filter></defs>
+<rect x="64" y="125.4" width="736" height="54.9" fill="#1565c0" opacity="0.08"/>
+<line x1="64" y1="271.7" x2="800" y2="271.7" class="grid"/>
+<text x="56" y="275.7" text-anchor="end" class="ax">2.4억</text>
+<line x1="64" y1="235.1" x2="800" y2="235.1" class="grid"/>
+<text x="56" y="239.1" text-anchor="end" class="ax">2.5억</text>
+<line x1="64" y1="198.6" x2="800" y2="198.6" class="grid"/>
+<text x="56" y="202.6" text-anchor="end" class="ax">2.6억</text>
+<line x1="64" y1="162.0" x2="800" y2="162.0" class="grid"/>
+<text x="56" y="166.0" text-anchor="end" class="ax">2.7억</text>
+<line x1="64" y1="125.4" x2="800" y2="125.4" class="grid"/>
+<text x="56" y="129.4" text-anchor="end" class="ax">2.8억</text>
+<line x1="64" y1="88.9" x2="800" y2="88.9" class="grid"/>
+<text x="56" y="92.9" text-anchor="end" class="ax">2.9억</text>
+<line x1="64" y1="52.3" x2="800" y2="52.3" class="grid"/>
+<text x="56" y="56.3" text-anchor="end" class="ax">3.0억</text>
+<line x1="64.0" y1="290" x2="64.0" y2="295" class="grid"/><text x="64.0" y="310" text-anchor="middle" class="ax">1월</text>
+<line x1="146.7" y1="290" x2="146.7" y2="295" class="grid"/><text x="146.7" y="310" text-anchor="middle" class="ax">2월</text>
+<line x1="221.3" y1="290" x2="221.3" y2="295" class="grid"/><text x="221.3" y="310" text-anchor="middle" class="ax">3월</text>
+<line x1="304.0" y1="290" x2="304.0" y2="295" class="grid"/><text x="304.0" y="310" text-anchor="middle" class="ax">4월</text>
+<line x1="384.0" y1="290" x2="384.0" y2="295" class="grid"/><text x="384.0" y="310" text-anchor="middle" class="ax">5월</text>
+<line x1="466.7" y1="290" x2="466.7" y2="295" class="grid"/><text x="466.7" y="310" text-anchor="middle" class="ax">6월</text>
+<line x1="546.7" y1="290" x2="546.7" y2="295" class="grid"/><text x="546.7" y="310" text-anchor="middle" class="ax">7월</text>
+<line x1="629.3" y1="290" x2="629.3" y2="295" class="grid"/><text x="629.3" y="310" text-anchor="middle" class="ax">8월</text>
+<line x1="712.0" y1="290" x2="712.0" y2="295" class="grid"/><text x="712.0" y="310" text-anchor="middle" class="ax">9월</text>
+<line x1="792.0" y1="290" x2="792.0" y2="295" class="grid"/><text x="792.0" y="310" text-anchor="middle" class="ax">10월</text>
+<line x1="64" y1="125.4" x2="800" y2="125.4" stroke="#c62828" stroke-width="1.4" stroke-dasharray="6,3"/>
+<text x="70" y="119.4" font-size="11.5" font-weight="700" fill="#c62828">자금계획 가정 매도가 2.8억</text>
+<line x1="64" y1="162.0" x2="800" y2="162.0" stroke="#1565c0" stroke-width="1.4"/>
+<text x="70" y="195.3" font-size="11.5" font-weight="700" fill="#1565c0">예상 범위 2.65~2.8억 · 예상 시세 2.7억(실선)</text>
+<circle cx="64.0" cy="165.7" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="114.7" cy="235.1" r="6" fill="#90a4ae" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="208.0" cy="180.3" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="264.0" cy="169.3" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="280.0" cy="271.7" r="6" fill="none" stroke="#ef6c00" stroke-width="2.2"/>
+<text x="280.0" y="289.7" text-anchor="middle" class="lb">2.4억 · 직거래</text>
+<circle cx="285.3" cy="227.8" r="6" fill="#90a4ae" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="290.7" cy="151.0" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="306.7" cy="162.0" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="312.0" cy="52.3" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<text x="312.0" y="40.3" text-anchor="middle" class="lb">3억 · 7층 (수리 추정)</text>
+<circle cx="360.0" cy="147.4" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<text x="360.0" y="135.4" text-anchor="middle" class="lb">103동 13층</text>
+<path d="M355.0,142.4 l10,10 m0,-10 l-10,10" stroke="#c62828" stroke-width="2"/>
+<circle cx="589.3" cy="162.0" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="677.3" cy="165.7" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="682.7" cy="216.9" r="6" fill="#90a4ae" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="717.3" cy="114.5" r="6" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<text x="717.3" y="102.5" text-anchor="middle" class="lb">2.83억 · 11층</text>
+<circle cx="760.0" cy="162.0" r="7.5" fill="#1565c0" stroke="#fff" stroke-width="1.5" filter="url(#sh)"/>
+<text x="760.0" y="180.0" text-anchor="middle" class="lb">2.7억 · 6층 ★</text>
+</svg>
+</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1565c0;"></div>일반 층 중개거래</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#90a4ae;"></div>1층</div>
+  <div class="legend-item"><div class="legend-dot" style="border:2.2px solid #ef6c00;background:transparent;box-sizing:border-box;"></div>직거래</div>
+  <div class="legend-item"><span style="color:#c62828;font-weight:800;">✕</span>해제된 거래</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1565c0;opacity:.25;border-radius:3px;"></div>예상 시세 범위</div>
+</div>
+
+<h2>2. 요약 통계</h2>
+<div class="tw"><table>
+  <tr><th>구분</th><th class="n">건수</th><th class="n">평균</th><th>비고</th></tr>
+  <tr><td>2026년 전체 (해제 제외)</td><td class="n">15건</td><td class="n">2억 6,720만</td><td>중간값 2억 6,900만</td></tr>
+  <tr><td>1분기</td><td class="n">7건</td><td class="n">2억 5,960만</td><td>1층 2건 · 직거래 1건 포함</td></tr>
+  <tr><td>2분기</td><td class="n">3건</td><td class="n">2억 8,130만</td><td>3억 거래 포함 · 5~6월 거래 없음</td></tr>
+  <tr><td>3분기</td><td class="n">5건</td><td class="n">2억 6,940만</td><td>1층 1건 포함</td></tr>
+  <tr class="sum"><td>일반 층 중개거래 (1층·직거래 제외)</td><td class="n">11건</td><td class="n">약 2억 7,370만</td><td>대부분 2억 6,500만 ~ 2억 7,400만</td></tr>
+  <tr><td>1층</td><td class="n">3건</td><td class="n">2억 5,230만</td><td>일반 층보다 1,500만 ~ 2,000만 낮음</td></tr>
+</table></div>
+
+<h2>3. 전체 거래 내역</h2>
+<div class="tw"><table class="tx" style="min-width:680px;">
+  <tr><th>계약일</th><th>동</th><th class="n">층</th><th class="n">거래금액</th><th>방식</th><th>등기일</th><th>비고</th></tr>
+<tr class=""><td>1월 1일</td><td>101</td><td class="n">10층</td><td class="n">2억 6,900</td><td>중개</td><td>26.02.10</td><td></td></tr>
+<tr class=""><td>1월 20일</td><td>104</td><td class="n">1층</td><td class="n">2억 5,000</td><td>중개</td><td>26.03.31</td><td><span class="tag low">1층</span></td></tr>
+<tr class=""><td>2월 24일</td><td>104</td><td class="n">13층</td><td class="n">2억 6,500</td><td>중개</td><td>26.05.07</td><td></td></tr>
+<tr class=""><td>3월 17일</td><td>105</td><td class="n">5층</td><td class="n">2억 6,800</td><td>중개</td><td>26.05.15</td><td></td></tr>
+<tr class=""><td>3월 23일</td><td>101</td><td class="n">19층</td><td class="n">2억 4,000</td><td>직</td><td>26.03.27</td><td><span class="tag dir">직거래</span> 시세 판단 제외</td></tr>
+<tr class=""><td>3월 25일</td><td>106</td><td class="n">1층</td><td class="n">2억 5,200</td><td>중개</td><td>26.05.26</td><td><span class="tag low">1층</span></td></tr>
+<tr class=""><td>3월 27일</td><td>102</td><td class="n">7층</td><td class="n">2억 7,300</td><td>중개</td><td>26.04.29</td><td></td></tr>
+<tr class=""><td>4월 2일</td><td>–</td><td class="n">9층</td><td class="n">2억 7,000</td><td>중개</td><td>–</td><td></td></tr>
+<tr class=""><td>4월 4일</td><td>106</td><td class="n">7층</td><td class="n">3억</td><td>중개</td><td>26.05.27</td><td>최고가 · 수리 집으로 추정</td></tr>
+<tr class=""><td>4월 22일</td><td>103</td><td class="n">13층</td><td class="n">2억 7,400</td><td>중개</td><td>26.06.01</td><td><span class="tag me">같은 동</span></td></tr>
+<tr class="x"><td>4월 22일</td><td>–</td><td class="n">13층</td><td class="n"><s>2억 7,400</s></td><td>중개</td><td>–</td><td><span class="tag can">해제</span> 계약 당일 해제, 같은 조건 재신고</td></tr>
+<tr class=""><td>7월 17일</td><td>–</td><td class="n">10층</td><td class="n">2억 7,000</td><td>중개</td><td>–</td><td></td></tr>
+<tr class=""><td>8월 19일</td><td>–</td><td class="n">10층</td><td class="n">2억 6,900</td><td>중개</td><td>–</td><td></td></tr>
+<tr class=""><td>8월 21일</td><td>–</td><td class="n">1층</td><td class="n">2억 5,500</td><td>중개</td><td>–</td><td><span class="tag low">1층</span></td></tr>
+<tr class=""><td>9월 3일</td><td>–</td><td class="n">11층</td><td class="n">2억 8,300</td><td>중개</td><td>–</td><td></td></tr>
+<tr class=""><td>9월 19일</td><td>–</td><td class="n">6층</td><td class="n">2억 7,000</td><td>중개</td><td>–</td><td><span class="tag me">같은 층</span> 가장 직접적인 비교 사례</td></tr>
+</table></div>
+<div class="note" style="margin-top:8px;">※ 동·등기일은 등기를 마친 거래만 공개됩니다. 실거래 자료는 개인정보 보호로 호수를 공개하지 않습니다(호수 확인은 인터넷등기소 등기부 열람 필요).</div>
+
+<h2>4. 103동 6층 시세 산정</h2>
+<div class="check">
+  <p><b>① 같은 층 최근 거래:</b> 9월 19일 6층 <b>2억 7,000만</b>. 가장 직접적인 비교 사례입니다.</p>
+  <p><b>② 최근 3개월 일반 층:</b> 7월 2억 7,000(10층) · 8월 2억 6,900(10층) · 9월 2억 8,300(11층) · 9월 2억 7,000(6층), 평균 <b>2억 7,300만</b>.</p>
+  <p><b>③ 같은 동:</b> 4월 22일 103동 13층 2억 7,400만. 6층은 중간 층이라 고층보다 조금 낮게 봅니다.</p>
+  <p><b>④ 제외한 거래:</b> 4월 4일 3억(7층)은 혼자 튀는 값이라 수리·확장된 집으로 보고 기준에서 뺐습니다. 3월 23일 직거래 2억 4,000만도 가족 간 거래 가능성이 있어 뺐습니다.</p>
+  <p><b>⑤ 결론:</b> 예상 시세 <b>약 2억 7,000만 원</b>(범위 2억 6,500만 ~ 2억 8,000만). 확장·리모델링을 했다면 2억 8,000만 이상도 기대할 수 있습니다.</p>
+</div>
+
+<h2>5. 매도 전략</h2>
+<div class="tw" style="padding:14px 16px;">
+<ul class="pl">
+  <li><b>호가 2억 8,000만 ~ 2억 8,500만</b>으로 내놓고, <b>2억 7,000만 ~ 2억 7,500만</b>에 마무리하는 것을 목표로 합니다.</li>
+  <li>9월 2억 8,300만(11층) 거래가 있어 2억 8,000만 호가는 매수자에게 설명이 되는 가격입니다.</li>
+  <li>수리 내역(확장, 샷시, 욕실, 주방 등)이 있으면 사진과 함께 정리해 두면 3억 거래 사례를 근거로 협상할 수 있습니다.</li>
+  <li>9월 후반 이후 계약은 신고 기한(계약 후 30일)이 지나지 않아 아직 안 보일 수 있으니, 내놓기 직전에 최신 실거래를 한 번 더 확인합니다.</li>
+</ul>
+</div>
+
+<h2>6. 잔금 자금계획 점검</h2>
+<div class="check">
+  <p><a class="xlink" href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">힐스테이트 첨단센트럴 잔금 자금계획</a>은 기존 주택 매도대금을 <b>2억 8,000만 원</b>으로 잡고 있고, 최종 잉여액은 <b>11,301,783원</b>입니다. 2억 8,000만은 실거래 범위의 위쪽 끝이라, 매도가에 따라 잉여액이 아래처럼 달라집니다(다른 항목은 그대로 두고 매도대금만 바꾼 값).</p>
+</div>
+<div class="tw" style="margin-top:10px;"><table>
+  <tr><th>매도가</th><th class="n">자금계획 대비</th><th class="n">최종 잉여액(원)</th><th>판단</th></tr>
+  <tr><td>2억 8,000만 (현재 가정)</td><td class="n">0</td><td class="n pos">11,301,783</td><td>범위 위쪽 끝</td></tr>
+  <tr><td>2억 7,500만</td><td class="n neg">△5,000,000</td><td class="n pos">6,301,783</td><td>목표 상단</td></tr>
+  <tr class="hl"><td>2억 7,000만 (예상 시세)</td><td class="n neg">△10,000,000</td><td class="n pos">1,301,783</td><td>여유 거의 없음</td></tr>
+  <tr><td>2억 6,500만</td><td class="n neg">△15,000,000</td><td class="n neg">△3,698,217</td><td>부족</td></tr>
+</table></div>
+<div class="check" style="margin-top:10px;">
+  <p><b>시사점:</b> 예상 시세 2억 7,000만에 팔면 잉여액이 약 130만 원으로 줄어듭니다. 2억 6,500만 아래로 내려가면 약 370만 원이 부족하니, 자금계획을 <b>2억 7,000만 기준으로 보수적으로 다시 잡는 것</b>을 권합니다.</p>
+  <p><b>자금 시점:</b> 입주 잔금 납부기간은 2026.10.30 ~ 2027.01.29입니다. 매도 잔금일을 이 기간 안으로 맞추거나 브릿지 자금을 준비해야 합니다.</p>
+</div>
+
+<h2>7. 매도 비용과 세금</h2>
+<div class="tw"><table>
+  <tr><th>항목</th><th>내용</th></tr>
+  <tr><td style="white-space:nowrap">중개수수료</td><td>상한 0.4%. 2억 7,000만이면 108만 원, 부가세 포함 약 119만 원 (자금계획엔 150만 원으로 보수적으로 반영)</td></tr>
+  <tr><td style="white-space:nowrap">양도소득세</td><td>새 아파트를 취득한 뒤 정해진 기간 안에 기존 집을 팔면 <b>일시적 2주택 비과세</b>가 될 수 있습니다. 보유 기간·취득 시점에 따라 달라지므로 계약 전에 세무사나 홈택스에서 꼭 확인하세요.</td></tr>
+  <tr><td style="white-space:nowrap">선수관리비</td><td>매도 시 매수인에게 받거나 관리사무소에서 정산</td></tr>
+</table></div>
+
+<div class="note">
+  ※ 출처: 국토교통부 아파트 매매 실거래가 공개 API (공공데이터포털) · 지역코드 12300 (전남광주통합특별시 북구, 2026.7.1 통합 전 29170) · 조회 기간 2026.01 ~ 2026.10.04 계약분 | 기준일: 2026.10.04<br>
+  ※ 예상 시세는 실거래 자료를 바탕으로 한 추정이며, 집 상태·수리 여부·시장 상황에 따라 달라질 수 있습니다. 세금 내용은 일반적인 안내이며 세무 상담을 대신하지 않습니다.
+</div>
+
+<script>
+(function(){
+  var h=location.hostname;
+  if(location.protocol==='file:'||/\.github\.io$/.test(h))return;
+  document.querySelectorAll('a[data-art]').forEach(function(a){a.href=a.dataset.art;a.target='_blank';a.rel='noopener';});
+})();
+</script>
+</body>
+</html>
