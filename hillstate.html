@@ -75,7 +75,7 @@ tr.due td{background:#fce4ec33;}
   <div class="kpi"><div class="l">시행사 납부 예정액 (안내장)</div><div class="v">202,368,217</div></div>
   <div class="kpi"><div class="l">잔금일 필요자금 (중도금 대출 상환 포함)</div><div class="v">498,768,217</div></div>
   <div class="kpi"><div class="l">자금 조달액</div><div class="v">525,000,000</div></div>
-  <div class="kpi pos"><div class="l">입주비용 반영 후 잉여액</div><div class="v">11,301,783</div></div>
+  <div class="kpi pos"><div class="l">입주비용 반영 후 잉여액</div><div class="v">9,141,783</div></div>
 </div>
 
 <h2>1. 잔금 납부 안내장 청구내역</h2>
@@ -109,7 +109,7 @@ tr.due td{background:#fce4ec33;}
 
 <h2>3. 자금 흐름</h2>
 <div class="svgwrap">
-<svg viewBox="0 0 420 756" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
+<svg viewBox="0 0 420 778" xmlns="http://www.w3.org/2000/svg" font-family="Malgun Gothic,Apple SD Gothic Neo,sans-serif">
   <defs>
     <filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00000014"/></filter>
     <marker id="arr-gray" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto"><path d="M0,0 L0,8 L10,4 z" fill="#78909c"/></marker>
@@ -150,7 +150,7 @@ tr.due td{background:#fce4ec33;}
   <line x1="210" y1="386" x2="210" y2="410" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
 
   <!-- C: 잔금 후 잔액 (y=414, h=194) -->
-  <rect x="20" y="414" width="380" height="194" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="20" y="414" width="380" height="216" rx="10" fill="#e3f2fd" stroke="#1e88e5" stroke-width="1.5" filter="url(#sh)"/>
   <rect x="162" y="424" width="96" height="20" rx="5" fill="#90caf9"/>
   <text x="210" y="438" text-anchor="middle" font-size="11" font-weight="700" fill="#0d47a1">잔금 후 잔액</text>
   <text x="210" y="466" text-anchor="middle" font-size="20" font-weight="800" fill="#0d47a1">26,231,783</text>
@@ -165,16 +165,18 @@ tr.due td{background:#fce4ec33;}
   <text x="384" y="566" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△1,500,000</text>
   <text x="36" y="588" font-size="12.5" fill="#555">선수관리비 (관리비 예치금)</text>
   <text x="384" y="588" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△430,000</text>
+  <text x="36" y="610" font-size="12.5" fill="#555">중도금 대출 이자 (10.30~12.27)</text>
+  <text x="384" y="610" text-anchor="end" font-size="12.5" font-weight="700" fill="#c62828">△2,160,000</text>
 
-  <line x1="210" y1="610" x2="210" y2="634" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
+  <line x1="210" y1="632" x2="210" y2="656" stroke="#78909c" stroke-width="1.8" marker-end="url(#arr-gray)"/>
 
   <!-- D: 최종 잉여액 (y=638, h=106) -->
-  <rect x="20" y="638" width="380" height="106" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" filter="url(#sh)"/>
-  <rect x="165" y="648" width="90" height="20" rx="5" fill="#a5d6a7"/>
-  <text x="210" y="662" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">최종 잉여액</text>
-  <text x="210" y="690" text-anchor="middle" font-size="20" font-weight="800" fill="#1b5e20">11,301,783</text>
+  <rect x="20" y="660" width="380" height="106" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="165" y="670" width="90" height="20" rx="5" fill="#a5d6a7"/>
+  <text x="210" y="684" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">최종 잉여액</text>
+  <text x="210" y="712" text-anchor="middle" font-size="20" font-weight="800" fill="#1b5e20">9,141,783</text>
   <line x1="36" y1="704" x2="384" y2="704" stroke="#a5d6a7" stroke-width="1.2"/>
-  <text x="210" y="726" text-anchor="middle" font-size="12.5" fill="#555">입주비용 지출 후 여유자금</text>
+  <text x="210" y="748" text-anchor="middle" font-size="12.5" fill="#555">입주비용 지출 후 여유자금</text>
 </svg>
 </div>
 
@@ -198,8 +200,9 @@ tr.due td{background:#fce4ec33;}
   <tr><td></td><td>이사</td><td class="n">1,000,000</td></tr>
   <tr><td></td><td>기존 주택 매도 중개수수료</td><td class="n">1,500,000</td></tr>
   <tr><td></td><td>선수관리비 (84A, 매도 시 환급)</td><td class="n">430,000</td></tr>
-  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">14,930,000</td></tr>
-  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n pos">11,301,783</td></tr>
+  <tr><td></td><td>중도금 대출 이자 (10.30~12.27, 59일·연 4.5% 가정)</td><td class="n">2,160,000</td></tr>
+  <tr class="sum"><td colspan="2">입주비용 합계 (C)</td><td class="n">17,090,000</td></tr>
+  <tr class="sum"><td colspan="2">최종 과부족 (A−B−C)</td><td class="n pos">9,141,783</td></tr>
 </table></div>
 
 <h2>5. 검토 사항</h2>
@@ -208,10 +211,11 @@ tr.due td{background:#fce4ec33;}
   <p><b>② 중도금 대출 상환:</b> 중도금 1~6차 296,400,000원은 중도금 대출로 납부된 것으로 보고, 잔금일에 잔금 대출 등으로 상환하는 것으로 계산했습니다. 은행에서 잔금일 기준 중도금 대출 상환액을 확인해 주세요. 잔금 대출이 중도금 대출을 대환하는 방식이면 실제 현금 흐름은 같습니다.</p>
   <p><b>③ 후불이자 변동:</b> 후불이자 15,990,217원은 2026.09.07 기준입니다. 납부일이 늦어질수록 늘어나므로 <b>12.28 기준 확정 금액</b>을 납부 직전에 시행사(1877-8555)에 확인해야 합니다.</p>
   <p><b>④ 납부 기간과 입금 방법:</b> 잔금 납부기간은 2026.10.30 ~ 2027.01.29입니다. 입금할 때는 입금자명에 동호수와 계약자명을 함께 적어야 합니다(예: 0111동 1303호 → 01111303홍길동). 아파트 잔금, 옵션, 후불이자는 입금 계좌가 각각 다르니 안내장의 계좌를 확인하세요.</p>
-  <p><b>⑤ 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 잉여액은 약 11,322,393원입니다.</p>
+  <p><b>⑤ 취득세 상세:</b> 과표 543,581,821원(옵션 부가세 제외) × 1.1% ≈ <b>5,979,390원</b>(취득세 5,435,810 + 지방교육세 543,580, 농특세 비과세). 1주택 기준이며, 이를 반영하면 잉여액은 약 9,162,393원입니다.</p>
   <p><b>⑥ 자금 시점:</b> 매도대금 2.6억이 잔금일 이후 들어오면 일시적 자금 공백이 생기므로 매도 잔금일을 입주 잔금일(<b>2026.12.28</b>)에 맞추거나 브릿지 자금을 준비해야 합니다. 매도가는 금호아파트 실거래 기준 예상 시세(약 2.7억 원)보다 1,000만 원 낮게 보수적으로 잡았고, 줄어든 2,000만 원은 잔금 대출을 3.2억 원으로 늘려 메웠습니다. 2.7억에 팔리면 그만큼 여유자금이 늘어납니다(매도가별 비교는 <a class="xlink" href="ilgok_kumho_sale.html" data-art="https://claude.ai/artifact/FKtVFwfpZJUnKB255ZTNMw">금호아파트 매도 시세 보고서</a> 참고).</p>
   <p><b>⑦ 대출 한도:</b> 잔금 대출 3.2억 원은 감정가·DSR 심사 후 확정되므로 사전 한도 조회를 권장합니다. 연 4.4%·30년·원리금균등 기준 월 상환액은 <b>1,602,435원</b>(3억 원 대비 월 100,152원 증가)이며, 금리별·연도별 상세는 <a class="xlink" href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco">대출 상환스케줄</a>에서 확인할 수 있습니다. 카카오뱅크는 <b>2026.12.28(월)까지 실행</b>하면 중도상환수수료가 면제되고(우리은행은 3년 내 상환액의 70%에 최고 0.6%), 금리는 실행일 2영업일 전 금융채 5년 기준입니다(12.15 갱신 → 12.17 실행분부터 적용).</p>
   <p><b>⑧ 매도 중개수수료:</b> 매도가 2.6억 원의 법정 상한은 0.4%인 104만 원(부가세 10% 포함 시 114.4만 원)입니다. 150만 원은 상한보다 약 36만 원 많은 보수적 추정치이며, 협의에 따라 더 낮아질 수 있습니다.</p>
+  <p><b>⑨ 중도금 대출 이자:</b> 시행사 대납은 10.29에 끝나 10.30부터 잔금일 전날(12.27)까지 59일간 중도금 대출 296,400,000원의 이자를 직접 냅니다. 연 4.5% 가정 시 약 2,155,964원으로, <b>216만 원</b>을 입주비용에 넣었습니다(잉여액 11,301,783원 → 9,141,783원). 실제 금리와 이자 납부 방식(월별 자동이체 또는 상환 시 일괄)은 농협은행에서 확인하세요.</p>
 </div>
 
 <div class="legend">
