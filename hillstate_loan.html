@@ -71,6 +71,13 @@ summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);padding:6
 .xlink{color:#1565c0;font-weight:700;}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .xlink{color:#90caf9;}}
 :root[data-theme="dark"] .xlink{color:#90caf9;}
+.tl{display:grid;gap:0;background:var(--card);border-radius:10px;box-shadow:0 3px 10px #00000014;padding:6px 0;}
+.tl div{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:8px 16px;font-size:12.5px;line-height:20px;border-bottom:1px solid var(--line);}
+.tl div:last-child{border-bottom:0;}
+.tl b{font-variant-numeric:tabular-nums;}
+.tl .hot{background:var(--accbg);}
+td.w{white-space:normal;min-width:220px;}
+.cap{font-size:11.5px;color:var(--sub);margin:6px 2px 0;line-height:18px;}
 </style>
 </head>
 <body>
@@ -78,7 +85,7 @@ summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);padding:6
 <nav class="nav" aria-label="힐스테이트 문서"><a href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a><a href="hillstate_loan.html" data-art="https://claude.ai/artifact/5hdRUFckkyijPKJHzVTHco" aria-current="page">대출 상환스케줄</a><a href="hillstate_movein.html" data-art="https://claude.ai/artifact/3ZVML8YncS6AziZ5n8jKZU">입주 가이드</a></nav>
 
 <h1>힐스테이트 첨단센트럴 잔금대출 상환스케줄</h1>
-<div class="subtitle">잔금 대출 3.2억 원 · 변동금리 연 4.4% 가정 · 작성기준일 2026.11.19</div>
+<div class="subtitle">잔금 대출 3.2억 원 · 변동금리 연 4.4% 가정 · 카카오뱅크·우리은행 조건 비교 추가 · 작성기준일 2026.11.23</div>
 
 <form class="form" id="f" autocomplete="off">
   <label for="amt">대출금액(원)<input id="amt" inputmode="numeric" value="320,000,000"></label>
@@ -108,12 +115,41 @@ summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--acc);padding:6
   <div class="tw scroll"><table id="monthly"></table></div>
 </details>
 
-<h2>3. 검토 사항</h2>
+<h2>3. 잔금대출 은행 비교 (카카오뱅크 · 우리은행)</h2>
+<div class="tw"><table>
+  <tr><th>항목</th><th>카카오뱅크 분양잔금대출</th><th>우리은행</th></tr>
+  <tr><td>중도상환수수료</td><td class="w"><b>면제</b> — 단, <b>입주시작일(2026.10.30)로부터 60일 이내 실행</b> 시</td><td class="w">3년 이내 상환 시 부과 — 상환액의 <b>30% 면제</b>, 나머지 <b>70%에 최고 0.6%</b></td></tr>
+  <tr><td>적용 금리</td><td class="w">금융채 5년 + 가산금리, <b>실행일 2일 전 기준금리</b> 적용</td><td class="w">은행 제시 조건 확인 필요</td></tr>
+  <tr><td>기준금리 갱신</td><td class="w">금융채 5년 이율 <b>12월 15일 업데이트 예정</b></td><td class="w">—</td></tr>
+  <tr><td>실행 기한</td><td class="w"><b>2026.12.29(화)</b>까지 실행해야 수수료 면제</td><td class="w">잔금 납부기한 2027.1.29(금)까지</td></tr>
+</table></div>
+
+<h2>4. 일정표</h2>
+<div class="tl">
+  <div><b>2026.10.30 (금)</b><span>입주 시작일 — 카카오뱅크 60일 기간 시작</span></div>
+  <div><b>2026.12.15 (화)</b><span>금융채 5년 이율 업데이트 예정</span></div>
+  <div class="hot"><b>2026.12.17 (목)~</b><span>실행일 2일 전 기준이므로, 이날 이후 실행분부터 12/15 갱신 금리가 적용될 것으로 예상</span></div>
+  <div class="hot"><b>2026.12.29 (화)</b><span><b>카카오뱅크 중도상환수수료 면제 실행 마감</b> (10.30 + 60일, 기산 방식은 은행 확인)</span></div>
+  <div><b>2027.1.29 (금)</b><span>분양 잔금 납부기한 (이후 연체료)</span></div>
+</div>
+
+<h2>5. 우리은행 중도상환수수료 예시</h2>
+<div class="tw"><table>
+  <tr><th>중도상환 금액</th><th class="n">실행 직후 (최고)</th><th class="n">1년 후</th><th class="n">2년 후</th><th class="n">3년 후</th></tr>
+  <tr><td>1억 원</td><td class="n">420,000</td><td class="n">280,000</td><td class="n">140,000</td><td class="n">0</td></tr>
+  <tr class="cur"><td>1.9억 원 <span style="font-weight:400">(금호 매도 2.6억 − 담보대출 7천)</span></td><td class="n">798,000</td><td class="n">532,000</td><td class="n">266,000</td><td class="n">0</td></tr>
+  <tr><td>3.2억 원 (전액)</td><td class="n">1,344,000</td><td class="n">896,000</td><td class="n">448,000</td><td class="n">0</td></tr>
+</table></div>
+<p class="cap">계산: 상환액 × 70% × 0.6% × 남은 기간/3년 (잔존기간 비례 차감 가정). 카카오뱅크(60일 이내 실행)는 같은 경우 모두 0원입니다. ‘30% 면제’가 “연간 대출원금의 30%까지 면제” 방식이면 수수료는 이보다 적어집니다.</p>
+
+<h2>6. 검토 사항</h2>
 <div class="check">
   <p><b>① 변동금리:</b> 이 표는 대출기간 내내 입력한 금리가 유지된다고 가정합니다. 실제로는 COFIX 등 기준금리가 바뀔 때마다(보통 6개월·12개월 주기) 남은 원금과 기간으로 월 상환액이 다시 계산됩니다. 금리가 0.5%p 오르내릴 때의 차이는 1번 표를 참고하세요.</p>
   <p><b>② 원 단위 처리:</b> 월 이자는 잔액 × 연 금리 ÷ 12를 원 단위로 반올림했고, 끝전은 마지막 회차에서 정리합니다. 은행 실제 스케줄과 몇 원 차이가 날 수 있습니다.</p>
-  <p><b>③ 제외 항목:</b> 중도상환수수료, 인지세, 근저당 설정비, 보증료는 포함하지 않았습니다.</p>
+  <p><b>③ 제외 항목:</b> 상환스케줄에는 중도상환수수료(5번 표 참고), 인지세, 근저당 설정비, 보증료는 포함하지 않았습니다.</p>
   <p><b>④ 자금계획 연계:</b> <a class="xlink" href="hillstate.html" data-art="https://claude.ai/artifact/Wz2VxMd9Mfpwkv7uuQGLXQ">잔금 자금계획</a>의 잔금 후 여유자금(약 1,130만 원)은 입주 초기 월 상환액(1,602,435원)의 약 7개월분입니다. 첫 상환일은 보통 대출 실행 한 달 뒤입니다.</p>
+  <p><b>⑤ 실행일 선택:</b> 금호아파트가 팔리면 매도대금으로 일부 상환할 계획이므로 <b>중도상환수수료 면제가 큰 장점</b>입니다. 카카오뱅크를 쓰려면 잔금 납부기한(1.29)보다 한 달 이른 <b>12.29까지 실행</b>해야 하므로, 매도 잔금일·전세 입주일도 이 일정에 맞춰야 합니다. 12/15 갱신 금리가 낮으면 12.17~12.29 사이, 높으면 그 전에 실행하는 것이 유리합니다.</p>
+  <p><b>⑥ 확인할 것:</b> 60일 기산 방식(입주시작일 포함 여부), “2일 전”이 영업일 기준인지, 우리은행 ‘30% 면제’의 기준(상환액 기준인지 연간 원금 기준인지)과 잔존기간 차감 여부를 은행에 확인하세요.</p>
 </div>
 
 <script>
